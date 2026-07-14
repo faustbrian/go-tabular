@@ -30,6 +30,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Bound fuzz-smoke concurrency to avoid deadline flakes on high-core hosts.
 - Avoid per-cell XLSX type lookups for ordinary values, substantially reducing
   runtime, allocations, and peak memory for large workbooks.
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
