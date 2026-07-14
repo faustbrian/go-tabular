@@ -1,78 +1,53 @@
 # Contributing
 
-Thank you for helping make `go-tabular` a dependable tabular-ingest
-foundation.
+## Before Opening A Change
 
-## Before opening a change
+Use an issue for changes affecting tabular formats, archives, encodings, normalization, streaming, and data integrity. Explain the user problem,
+compatibility impact, and why the behavior belongs in this generic package.
 
-Use an issue for behavior changes that affect public APIs, parsing semantics,
-normalization rules, supported formats, compatibility, or performance
-characteristics. State which category the proposal belongs to:
-
-- supported-format behavior;
-- ingest or normalization semantics;
-- compatibility or API design;
-- performance or memory behavior;
-- documentation or examples;
-- implementation or test hardening.
-
-Do not present service-specific ingestion conventions as generic package
-requirements without showing why they belong in the package.
-
-## Development setup
+## Development Setup
 
 Requirements:
 
-- Go 1.25 or later;
-- Git;
-- `golangci-lint` for the same lint gate used by CI.
-
-Clone the repository and run:
+- Go 1.25 or later
+- Git
+- `golangci-lint` v2
 
 ```sh
 go mod download
-go test ./...
-go vet ./...
+make check
 ```
 
-## Change requirements
+## Change Requirements
 
-- Add a regression test before fixing a defect.
-- Keep meaningful 100% production-code coverage.
-- Preserve deterministic parsing and normalization behavior unless a
-  documented breaking change is intentional.
-- Update examples and user documentation for public behavior changes.
-- Update `GOAL.md` / `GOAL_HARDEN.md` when the package scope or hardening bar
-  changes materially.
-- Add an entry under `Unreleased` in `CHANGELOG.md`.
-- Keep dependencies minimal and explain every addition.
+- Add regression coverage before fixing a defect.
+- Maintain meaningful 100% production-code coverage.
+- Update public examples and documentation with behavior changes.
+- Update `GOAL.md` or `GOAL_HARDEN.md` when scope or acceptance criteria
+  change.
+- Add an `Unreleased` entry to `CHANGELOG.md`.
+- Explain every dependency addition, upgrade, or removal.
+- Update `NOTICE` and `THIRD_PARTY_NOTICES.md` when attribution changes.
 
-## Local verification
+## Package-Specific Review
+
+Document format, normalization, streaming, and memory impact. Parser changes MUST include realistic and malformed fixtures, limit tests, and evidence against silent truncation or conversion.
+
+## Local Verification
+
+Run the complete local gate:
 
 ```sh
-test -z "$(gofmt -l .)"
-go vet ./...
-go test ./...
-go test -coverpkg=./... -coverprofile=/tmp/go-tabular-coverage.out ./...
-go tool cover -func=/tmp/go-tabular-coverage.out
-go test ./... -run '^Example'
-go test ./... -run '^$' -bench . -benchtime=100ms
+make check
 ```
 
-Run fuzz targets for parsing changes where relevant.
-
-## Commit and pull request style
+## Commits And Pull Requests
 
 Use focused conventional commits with a body explaining why the change is
-needed. Pull requests should include:
+needed. Pull requests must describe compatibility impact, tests, verification
+commands and results, documentation updates, and changelog updates.
 
-- the ingest or parsing problem being solved;
-- compatibility and normalization impact;
-- tests and fixtures added;
-- verification commands and results;
-- documentation and changelog updates.
-
-## Reporting security issues
+## Reporting Security Issues
 
 Do not open a public issue for a suspected vulnerability. Follow
 [SECURITY.md](SECURITY.md).

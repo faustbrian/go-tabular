@@ -1,13 +1,25 @@
 # go-tabular
 
-`go-tabular` is a production-oriented Go package for explicit, bounded
-tabular ingestion. It handles CSV and other delimiters, fixed-width text,
-legacy XLS, XLSX, and ZIP-backed source files without format auto-detection or
-implicit data conversion.
+`go-tabular` provides explicit, bounded ingestion for CSV and other
+delimiters, fixed-width text, legacy XLS, XLSX, and ZIP-backed sources without
+format auto-detection or implicit data conversion.
+
+## Status
+
+The package is pre-v1. Supported behavior is fixture-backed, fuzzed,
+benchmarked, and held to meaningful 100% production coverage.
+
+## Requirements
+
+- Go 1.25 or later
+
+## Installation
 
 ```sh
 go get github.com/faustbrian/go-tabular
 ```
+
+## Quickstart
 
 ```go
 reader, err := tabular.NewDelimitedReader(source, tabular.DelimitedConfig{
@@ -27,71 +39,53 @@ header, err := reader.Header()
 if err != nil {
     return err
 }
-for {
-    row, err := reader.Read()
-    if errors.Is(err, io.EOF) {
-        break
-    }
-    if err != nil {
-        return err
-    }
-    consume(header, row)
-}
+row, err := reader.Read()
 ```
 
-## Design guarantees
+The [quickstart](docs/quickstart.md) covers streaming loops, fixed-width input,
+spreadsheets, ZIP sources, encodings, and normalization.
 
-- Formats and encodings are selected explicitly; there is no auto-detection.
-- Delimited, fixed-width, ZIP entry, and XLSX row processing are streaming.
-- XLS is bounded but materialized because OLE2/BIFF8 requires random access.
-- ZIP archives are indexed only after entry-count, size, path, and duplicate
-  checks.
-- UTF-8 is validated; supported legacy encodings are converted explicitly.
-- Normalization is opt-in and returns new rows instead of mutating inputs.
-- Stable error kinds work with `errors.Is`; row and field coordinates are
-  one-based.
+## Package Guarantees
 
-## Format summary
+- explicit format and encoding selection
+- streaming delimited, fixed-width, ZIP-entry, and XLSX row processing
+- bounded XLS materialization for OLE2/BIFF8 random access
+- archive entry-count, size, path, and duplicate checks
+- opt-in normalization that does not mutate caller-owned rows
+- stable error kinds with one-based row and field coordinates
 
-| Format | Processing | Supported core | Important boundary |
-| --- | --- | --- | --- |
-| CSV/delimited | Streaming | quotes, comments, delimiters, headers | caller supplies encoding conversion |
-| Fixed-width | Streaming | byte ranges, trimming, three encodings | offsets are bytes before decoding |
-| XLS | Bounded materialization | OLE2 + common BIFF8 cell records | no macros, formulas, formatting, or editing |
-| XLSX | Streaming rows | raw values, errors, sheet selection | OOXML ZIP is validated before Excelize |
-| ZIP | Streaming entries | exact lookup and extraction | no recursive extraction or filesystem writes |
-
-See the [full format matrix](docs/formats.md) and
-[behavior and limits](docs/behavior-and-limits.md) before adopting the
-spreadsheet readers.
+See [formats](docs/formats.md) and
+[behavior and limits](docs/behavior-and-limits.md) for exact boundaries.
 
 ## Documentation
 
-- [Quickstart](docs/quickstart.md)
-- [Architecture](docs/architecture.md)
-- [Public API reference](docs/api.md)
-- [Performance and memory verification](docs/performance.md)
-- [Adoption guide](docs/adoption.md)
-- [End-to-end examples](docs/examples.md)
-- [Scenario cookbook](docs/cookbook.md)
-- [FAQ](docs/faq.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Migration notes](docs/migration.md)
-- [Versioning and releases](docs/versioning.md)
-- [Contributing](CONTRIBUTING.md) and [security policy](SECURITY.md)
+Start with the [documentation index](docs/README.md), [quickstart](docs/quickstart.md),
+[adoption guide](docs/adoption.md), and [API reference](docs/api.md). Review
+[performance](docs/performance.md), [security](docs/security.md), and
+[hardening](docs/hardening.md) before accepting hostile files.
 
-## Dependency and provenance policy
+AI tools can use [llms.txt](llms.txt) and [llms-full.txt](llms-full.txt).
+Release history is maintained in [CHANGELOG.md](CHANGELOG.md).
 
-XLSX support uses
-[`github.com/xuri/excelize/v2`](https://github.com/qax-os/excelize). The XLS
-reader is maintained in `internal/xls`: it is a deliberately reduced,
-hardened OLE2/BIFF8 implementation informed by `github.com/millken/xls`, not a
-module dependency. Its Apache-2.0 provenance is retained in
-[`internal/xls/NOTICE.md`](internal/xls/NOTICE.md). The repository is
-distributed under the [Apache License 2.0](LICENSE).
+## Development
 
-## Status
+Run `make check` before submitting a change. This enforces formatting, static
+analysis, race tests, meaningful 100% coverage, parser fuzz smoke, benchmarks,
+documentation, and vulnerability scanning.
 
-The API is pre-v1. Supported behavior is fixture-backed, fuzzed, benchmarked,
-and held to 100% production-statement coverage. Export helpers are not part of
-the first release; see the [roadmap](ROADMAP.md).
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and follow the
+[code of conduct](CODE_OF_CONDUCT.md). Format and normalization changes require
+explicit compatibility and data-integrity analysis.
+
+## Security
+
+Report vulnerabilities privately according to [SECURITY.md](SECURITY.md).
+Review [docs/security.md](docs/security.md) before ingesting untrusted files.
+
+## License
+
+`go-tabular` is available under the [Apache License 2.0](LICENSE). XLS
+provenance and third-party attribution are recorded in [NOTICE](NOTICE) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

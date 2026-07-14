@@ -1,0 +1,28 @@
+# go-tabular
+
+> Documentation map for package users, adopters, operators, and contributors.
+
+- [Complete documentation bundle](llms-full.txt)
+- [go-tabular](README.md)
+- [go-tabular Documentation](docs/README.md)
+- [Quickstart](docs/quickstart.md)
+- [Adoption guide](docs/adoption.md)
+- [Public API reference](docs/api.md)
+- [Architecture](docs/architecture.md)
+- [End-to-end examples](docs/examples.md)
+- [Scenario cookbook](docs/cookbook.md)
+- [FAQ](docs/faq.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Migration notes](docs/migration.md)
+- [Versioning and releases](docs/compatibility.md)
+- [Performance and memory verification](docs/performance.md)
+- [Hardening](docs/hardening.md)
+- [Security](docs/security.md)
+- [Releasing](docs/releasing.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Roadmap](ROADMAP.md)
+- [Changelog](CHANGELOG.md)
+- [Behavior and limits](docs/behavior-and-limits.md)
+- [Supported-format matrix](docs/formats.md)
+- [Repository Standards](docs/repository-standards.md)

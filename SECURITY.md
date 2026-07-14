@@ -1,33 +1,34 @@
-# Security policy
+# Security Policy
 
-## Supported versions
+## Supported Versions
 
-Before `v1.0.0`, security fixes are applied to the latest revision of `main`.
-After the first stable release, the project will document supported release
-lines here and provide fixes for the latest stable minor line.
+Before `v1.0.0`, security fixes are applied to the latest revision of
+`main`. After the first stable release, supported release lines and
+end-of-support dates will be documented here.
 
-## Reporting a vulnerability
+## Reporting A Vulnerability
 
-Use GitHub's private vulnerability reporting for this repository. Include:
+Use GitHub private vulnerability reporting for this repository. Include a
+minimal reproducer, expected and observed behavior, affected versions, impact,
+and any suggested mitigation. Do not include secrets or production data.
 
-- the affected parser or ingest surface;
-- a minimal reproducer or malformed input file;
-- expected and observed behavior;
-- potential availability, integrity, or confidentiality impact;
-- any suggested mitigation.
+## Response Process
 
-Do not include secrets or production data. Please allow maintainers reasonable
-time to confirm and coordinate a fix before public disclosure.
+Maintainers will acknowledge the report, reproduce and assess it privately,
+coordinate a fix and advisory, and credit the reporter when requested. Public
+disclosure should wait until a fix or agreed mitigation is available.
 
-## Security posture
+## Package Security Boundary
 
-The package processes untrusted tabular inputs, archives, encodings, and row
-data. Its CI should therefore include static analysis, dependency
-vulnerability scanning, fixture regressions, and format-specific hardening
-tests. Applications should still apply request, file-size, archive, and memory
-limits before handing inputs to the package.
+Files, archives, workbooks, encodings, records, headers, formulas, and row values are untrusted ingest inputs. Archive, allocation, record, and encoding limits are part of the maintained security boundary.
 
-Delimiter parsing, spreadsheet handling, fixed-width extraction, encoding
-conversion, and archive extraction should be treated as hostile-input
-boundaries. Public documentation must explain known limits and unsupported
-cases clearly rather than implying broader guarantees than the code provides.
+## Application Responsibilities
+
+Applications remain responsible for transport limits, authentication,
+authorization, rate limiting, deadlines, secret handling, deployment policy,
+and business-level validation. Package safeguards do not replace those
+controls.
+
+See [docs/security.md](docs/security.md) and
+[docs/hardening.md](docs/hardening.md) for adoption guidance and maintained
+evidence.
