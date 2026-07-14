@@ -276,12 +276,33 @@ func TestXLSXRowSourceSurfacesIteratorFailures(t *testing.T) {
 
 	wantType := errors.New("cell type failed")
 	source = &xlsxRowSource{
-		rows:     &stubXLSXRows{next: true, values: []string{"value"}},
+		rows:     &stubXLSXRows{next: true, values: []string{"#VALUE!"}},
 		workbook: &stubXLSXWorkbook{typeErr: wantType},
 		sheet:    "Data",
 	}
 	if _, err := source.Read(); !errors.Is(err, wantType) {
 		t.Fatalf("Read() cell-type error = %v", err)
+	}
+}
+
+func TestXLSXRowSourceSkipsCellTypeLookupForOrdinaryValues(t *testing.T) {
+	t.Parallel()
+
+	workbook := &stubXLSXWorkbook{}
+	source := &xlsxRowSource{
+		rows:     &stubXLSXRows{next: true, values: []string{"Alice", "Helsinki"}},
+		workbook: workbook,
+		sheet:    "Data",
+	}
+	row, err := source.Read()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if workbook.typeCalls != 0 {
+		t.Fatalf("GetCellType() calls = %d, want 0", workbook.typeCalls)
+	}
+	if row[0].value != "Alice" || row[1].value != "Helsinki" {
+		t.Fatalf("Read() row = %#v", row)
 	}
 }
 
@@ -316,9 +337,13 @@ func (rows *stubXLSXRows) Columns(...excelize.Options) ([]string, error) {
 
 func (*stubXLSXRows) Close() error { return nil }
 
-type stubXLSXWorkbook struct{ typeErr error }
+type stubXLSXWorkbook struct {
+	typeErr   error
+	typeCalls int
+}
 
 func (workbook *stubXLSXWorkbook) GetCellType(string, string) (excelize.CellType, error) {
+	workbook.typeCalls++
 	return excelize.CellTypeUnset, workbook.typeErr
 }
 

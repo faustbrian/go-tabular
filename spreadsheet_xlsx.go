@@ -120,11 +120,14 @@ func (source *xlsxRowSource) Read() ([]spreadsheetCell, error) {
 	}
 	row := make([]spreadsheetCell, len(values))
 	for index, value := range values {
+		row[index].value = value
+		if !strings.HasPrefix(value, "#") {
+			continue
+		}
 		cellType, typeErr := source.workbook.GetCellType(source.sheet, cellName(index+1, source.row))
 		if typeErr != nil {
 			return nil, typeErr
 		}
-		row[index].value = value
 		if cellType == excelize.CellTypeError {
 			row[index].err = value
 		}
