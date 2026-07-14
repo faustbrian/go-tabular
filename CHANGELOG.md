@@ -9,6 +9,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Gated, disk-backed benchmarks for CSV and XLSX inputs of at least 50 MiB and
+  100,000 rows, including a scheduled workflow with peak-memory reporting.
 - Explicit chunked-streaming regressions, malformed fixtures for every major
   format, and documentation of benchmark inputs and XLSX heap amplification.
 - Production readers for CSV/delimited, fixed-width, XLS, XLSX, and ZIP-backed
@@ -26,6 +28,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Avoid per-cell XLSX type lookups for ordinary values, substantially reducing
+  runtime, allocations, and peak memory for large workbooks.
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
