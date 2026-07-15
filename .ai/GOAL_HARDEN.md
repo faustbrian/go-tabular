@@ -7,8 +7,8 @@ Its purpose is to prevent a superficially complete package from shipping with
 weak ingestion guarantees, poor hostile-input behavior, or misleading
 performance claims.
 
-`GOAL.md` defines what the package should do.
-`GOAL_HARDEN.md` defines how rigorously it must prove that it does it.
+`.ai/GOAL.md` defines what the package should do.
+`.ai/GOAL_HARDEN.md` defines how rigorously it must prove that it does it.
 
 ## Hardening Priorities
 

@@ -21,5 +21,5 @@ unbounded attacker-controlled allocation, archive traversal, incorrect
 declared streaming behavior, unstable errors, or unsupported format behavior
 presented as supported.
 
-See [GOAL_HARDEN.md](../GOAL_HARDEN.md), [behavior and limits](behavior-and-limits.md),
+See [GOAL_HARDEN.md](../.ai/GOAL_HARDEN.md), [behavior and limits](behavior-and-limits.md),
 and [performance](performance.md).

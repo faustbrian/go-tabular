@@ -12,6 +12,7 @@ Use this index to select a tabular format and define safe ingest limits.
 ## Design And Operations
 
 - [Architecture](architecture.md)
+- [Go safety and concurrency](go-safety-and-concurrency.md)
 - [Formats](formats.md)
 - [Behavior and limits](behavior-and-limits.md)
 - [Compatibility](compatibility.md)

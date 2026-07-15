@@ -25,4 +25,5 @@
 - [Changelog](CHANGELOG.md)
 - [Behavior and limits](docs/behavior-and-limits.md)
 - [Supported-format matrix](docs/formats.md)
+- [Go Safety And Concurrency](docs/go-safety-and-concurrency.md)
 - [Repository Standards](docs/repository-standards.md)
