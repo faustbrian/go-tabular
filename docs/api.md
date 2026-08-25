@@ -1,7 +1,7 @@
 # Public API reference
 
 The authoritative signature documentation is available through
-`go doc github.com/faustbrian/golib/pkg/tabular`. This page groups the surface by
+`go doc github.com/faustbrian/go-tabular`. This page groups the surface by
 task and records compatibility-sensitive semantics.
 
 ## Rows and normalization

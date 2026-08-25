@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-tabular",
+  "packages": [
+    {
+      "module_directory": ".",
+      "directory": ".",
+      "name": "tabular",
+      "import_path": "github.com/faustbrian/go-tabular",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/xls",
+      "name": "xls",
+      "import_path": "github.com/faustbrian/go-tabular/internal/xls",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    }
+  ]
+}

@@ -20,7 +20,7 @@ benchmarked, and held to meaningful 100% production coverage.
 ## Installation
 
 ```sh
-go get github.com/faustbrian/golib/pkg/tabular
+go get github.com/faustbrian/go-tabular
 ```
 
 ## Quickstart
@@ -216,7 +216,7 @@ with the existing importer before replacing it.
 # Public API reference
 
 The authoritative signature documentation is available through
-`go doc github.com/faustbrian/golib/pkg/tabular`. This page groups the surface by
+`go doc github.com/faustbrian/go-tabular`. This page groups the surface by
 task and records compatibility-sensitive semantics.
 
 ## Rows and normalization
@@ -831,7 +831,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/golib/commits/main/pkg/tabular
+[Unreleased]: https://github.com/faustbrian/go-tabular/commits/main
 
 ## Source: docs/behavior-and-limits.md
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	tabular "github.com/faustbrian/golib/pkg/tabular"
+	tabular "github.com/faustbrian/go-tabular"
 )
 
 func ExampleNewDelimitedReader() {

@@ -1,7 +1,7 @@
 # Versioning and releases
 
-The project follows Semantic Versioning. Before v1, minor releases may change
-the public API; patch releases preserve documented parsing behavior. After v1,
+The project follows Semantic Versioning. Breaking public API changes require a
+new major release; patch releases preserve documented parsing behavior.
 row shape, normalization order, error categories, default limits, and
 configuration meaning are compatibility-sensitive.
 

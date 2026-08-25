@@ -7,6 +7,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-25
+
 ### Documentation
 
 - Replace obsolete standalone-repository links and workflow claims with
@@ -21,6 +23,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Publish the module from its standalone `github.com/faustbrian/go-tabular` identity while preserving its documented API and behavior.
 - Added the `GO-SAFETY-1` ownership, concurrency, race, fuzz, resource, and
   benchmark standard with an executable `make safety` gate.
 - Moved AI planning and hardening briefs into `.ai/` and clarified the
@@ -73,4 +76,5 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/golib/commits/main/pkg/tabular
+[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v1.0.0

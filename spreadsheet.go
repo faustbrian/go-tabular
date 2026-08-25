@@ -5,7 +5,7 @@ import (
 	"io"
 	"slices"
 
-	internalxls "github.com/faustbrian/golib/pkg/tabular/internal/xls"
+	internalxls "github.com/faustbrian/go-tabular/internal/xls"
 )
 
 const defaultMaxWorkbookBytes int64 = 64 * 1024 * 1024

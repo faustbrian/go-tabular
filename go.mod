@@ -1,4 +1,4 @@
-module github.com/faustbrian/golib/pkg/tabular
+module github.com/faustbrian/go-tabular
 
 go 1.26.6
 

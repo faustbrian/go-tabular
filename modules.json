@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-tabular",
+  "go_version": "1.26.6",
+  "modules": [
+    {
+      "directory": ".",
+      "module_path": "github.com/faustbrian/go-tabular",
+      "go_version": "1.26.6",
+      "packages": [
+        {
+          "module_directory": ".",
+          "directory": ".",
+          "name": "tabular",
+          "import_path": "github.com/faustbrian/go-tabular",
+          "kind": "public",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
+          "directory": "internal/xls",
+          "name": "xls",
+          "import_path": "github.com/faustbrian/go-tabular/internal/xls",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        }
+      ],
+      "purpose": "`tabular` provides explicit, bounded ingestion for CSV and other delimiters, fixed-width text, legacy XLS, XLSX, and ZIP-backed sources without format auto-detection or implicit data conversion.",
+      "lifecycle": "stable",
+      "kind": "public library",
+      "releasable": true,
+      "family": "integration-and-data-movement",
+      "family_label": "Integration And Data Movement",
+      "family_description": "Bounded external I/O, data movement, provider boundaries, and derived search state.",
+      "family_order": 7,
+      "version": "v1.0.0",
+      "tag_prefix": "v",
+      "owned_dependencies": [],
+      "reverse_owned_dependencies": [],
+      "external_runtime_dependencies": [
+        "github.com/xuri/excelize/v2",
+        "golang.org/x/text"
+      ],
+      "required_services": [],
+      "build_tags": [],
+      "test_tags": [],
+      "interoperability_tools": [],
+      "specifications": [],
+      "conformance_corpora": [],
+      "provenance": [],
+      "goal_files": [
+        ".ai/GOAL.md",
+        ".ai/GOAL_HARDEN.md"
+      ],
+      "goal_status": "implementation-evidence-inventoried",
+      "goal_evidence": [
+        {
+          "file": ".ai/GOAL.md",
+          "requirements_sha256": "095720c1690cc422920b8beddf241c5db8521d1cb4464d7d7b637a1bc01b7957",
+          "implementation_evidence": [
+            "CHANGELOG.md",
+            "README.md",
+            "docs/README.md",
+            "docs/api.md",
+            "docs/architecture.md",
+            "docs/compatibility.md",
+            "docs/hardening.md",
+            "docs/performance.md",
+            "docs/security.md"
+          ],
+          "verification_gates": [
+            "format-check",
+            "tidy-check",
+            "safety",
+            "vet",
+            "test",
+            "race",
+            "coverage",
+            "lint",
+            "staticcheck",
+            "vulnerability",
+            "secrets",
+            "licenses",
+            "sbom",
+            "fuzz",
+            "mutation",
+            "nilaway",
+            "docs",
+            "api",
+            "conformance",
+            "interoperability",
+            "benchmark"
+          ],
+          "implementation_status": "implemented-requires-fresh-verification"
+        },
+        {
+          "file": ".ai/GOAL_HARDEN.md",
+          "requirements_sha256": "c4d739197dabacd0dd125825adbaa5d28a2cead030a354cbf0815a9a01f00467",
+          "implementation_evidence": [
+            "CHANGELOG.md",
+            "README.md",
+            "docs/README.md",
+            "docs/api.md",
+            "docs/architecture.md",
+            "docs/compatibility.md",
+            "docs/hardening.md",
+            "docs/performance.md",
+            "docs/security.md"
+          ],
+          "verification_gates": [
+            "format-check",
+            "tidy-check",
+            "safety",
+            "vet",
+            "test",
+            "race",
+            "coverage",
+            "lint",
+            "staticcheck",
+            "vulnerability",
+            "secrets",
+            "licenses",
+            "sbom",
+            "fuzz",
+            "mutation",
+            "nilaway",
+            "docs",
+            "api",
+            "conformance",
+            "interoperability",
+            "benchmark"
+          ],
+          "implementation_status": "implemented-requires-fresh-verification"
+        }
+      ],
+      "gates": {
+        "api_compatibility": true,
+        "benchmarks": true,
+        "conformance": false,
+        "coverage": true,
+        "documentation": true,
+        "fuzz": true,
+        "lint": true,
+        "mutation": true,
+        "race": true,
+        "security": true,
+        "tests": true
+      }
+    }
+  ]
+}

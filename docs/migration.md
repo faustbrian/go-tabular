@@ -1,6 +1,6 @@
 # Migration notes
 
-Before v1, public API adjustments may occur but are recorded in the changelog.
+Public API adjustments follow Semantic Versioning and are recorded in the changelog.
 Pin a tagged version rather than `main`.
 
 When migrating from `encoding/csv`, note that `NewDelimitedReader` requires an
