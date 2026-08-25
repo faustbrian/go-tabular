@@ -9,6 +9,10 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Reconcile standalone dependency checksums against deterministic current
+  module archives so CI, local verification, and release consumers resolve
+  identical content.
+
 - Harden standalone documentation validation with deterministic spelling and
   link checks, package-specific documentation gates, and repository-local
   contributor guidance.
