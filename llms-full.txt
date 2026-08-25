@@ -1,8 +1,18 @@
-# tabular Complete Documentation
+# go-tabular Complete Documentation
 
 ## Source: README.md
 
 # tabular
+
+[![CI](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/badge/CodeQL-required-blue)](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25_required-blue)](CONTRIBUTING.md#verification)
+[![Mutation](https://img.shields.io/badge/mutation-100%25_required-blue)](CONTRIBUTING.md#verification)
+[![Documentation](https://img.shields.io/badge/docs-checked_in_CI-blue)](docs/)
+[![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-tabular.svg)](https://pkg.go.dev/github.com/faustbrian/go-tabular)
+[![Release](https://img.shields.io/github/v/release/faustbrian/go-tabular?sort=semver)](https://github.com/faustbrian/go-tabular/releases)
+[![Go](https://img.shields.io/badge/go-1.26.6-00ADD8?logo=go)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 `tabular` provides explicit, bounded ingestion for CSV and other
 delimiters, fixed-width text, legacy XLS, XLSX, and ZIP-backed sources without
@@ -10,7 +20,7 @@ format auto-detection or implicit data conversion.
 
 ## Status
 
-The package is pre-v1. Supported behavior is fixture-backed, fuzzed,
+The package has a stable v1 API. Supported behavior is fixture-backed, fuzzed,
 benchmarked, and held to meaningful 100% production coverage.
 
 ## Requirements
@@ -457,7 +467,7 @@ not a value contract.
 
 # Migration notes
 
-Before v1, public API adjustments may occur but are recorded in the changelog.
+Public API adjustments follow Semantic Versioning and are recorded in the changelog.
 Pin a tagged version rather than `main`.
 
 When migrating from `encoding/csv`, note that `NewDelimitedReader` requires an
@@ -477,8 +487,8 @@ structures rather than attempting recovery.
 
 # Versioning and releases
 
-The project follows Semantic Versioning. Before v1, minor releases may change
-the public API; patch releases preserve documented parsing behavior. After v1,
+The project follows Semantic Versioning. Breaking public API changes require a
+new major release; patch releases preserve documented parsing behavior.
 row shape, normalization order, error categories, default limits, and
 configuration meaning are compatibility-sensitive.
 
@@ -638,58 +648,60 @@ checksum and changelog-derived notes.
 
 # Contributing
 
-## Before Opening A Change
+## Before Editing
 
-Use an issue for changes affecting tabular formats, archives, encodings, normalization, streaming, and data integrity. Explain the user problem,
-compatibility impact, and why the behavior belongs in this generic package.
+1. Read [`AGENTS.md`](AGENTS.md) and the affected module's goals and docs.
+2. Run `make inventory` and the narrow baseline gate for the module.
+3. Identify owned dependencies and reverse dependants in `modules.json`.
+4. Preserve unrelated work and generated/corpus provenance.
 
-## Development Setup
+## Changes
 
-Requirements:
+Keep commits focused and conventional. Update every affected changelog with
+the behavior and migration impact. Public API changes require compatibility
+evidence and documentation. Specification behavior requires a decision record,
+fixture coverage, and interoperability evidence.
 
-- Go 1.26.6 or later
-- Git
-- `golangci-lint` v2
+New direct dependencies and dependency updates must follow the
+[dependency governance policy](AGENTS.md#dependencies-and-supply-chain). Package-local
+update bots are forbidden; the root policy owns every module and action update.
 
-```sh
-go mod download
+Specification-backed changes must follow the
+[specification governance contract](AGENTS.md#design), update
+the affected stable decision entries, and complete the Specification Decisions
+section of the pull request template. An unresolved interpretation or stale
+source pin is release-blocking; peer behavior cannot silently select policy.
+
+Required mutation gates must finish with zero surviving viable mutants.
+
+Do not add package-local workflows, permanent replacements, machine-specific
+paths, bypass flags, broad mutation exclusions, or aggregate quality metrics
+that hide a failing package.
+
+## Verification
+
+Run during development:
+
+```bash
+make inventory
 make check
 ```
 
-## Change Requirements
+Before submitting a repository-wide change:
 
-- Add regression coverage before fixing a defect.
-- Maintain meaningful 100% production-code coverage.
-- Update public examples and documentation with behavior changes.
-- Update `.ai/GOAL.md` or `.ai/GOAL_HARDEN.md` when scope or acceptance criteria
-  change.
-- Add an `Unreleased` entry to `CHANGELOG.md`.
-- Explain every dependency addition, upgrade, or removal.
-- Update `NOTICE` when project or inherited ownership notices change and
-  `THIRD_PARTY_NOTICES.md` when detailed source provenance or attribution changes.
-
-## Package-Specific Review
-
-Document format, normalization, streaming, and memory impact. Parser changes MUST include realistic and malformed fixtures, limit tests, and evidence against silent truncation or conversion.
-
-## Local Verification
-
-Run the complete local gate:
-
-```sh
-make check
+```bash
+make ci
 ```
 
-## Commits And Pull Requests
+The full scheduled and release gate is `make ci`. Report every unavailable or
+failing command; do not describe partial results as release-ready.
 
-Use focused conventional commits with a body explaining why the change is
-needed. Pull requests must describe compatibility impact, tests, verification
-commands and results, documentation updates, and changelog updates.
+## Adding A Module
 
-## Reporting Security Issues
-
-Do not open a public issue for a suspected vulnerability. Follow
-[SECURITY.md](SECURITY.md).
+Follow [repository structure policy](AGENTS.md#repository-structure). New modules
+require an explicit purpose, ownership boundary, dependency review, package
+catalog entry, full quality gates, documentation, changelog, license, security
+policy, compatibility plan, and release dry-run.
 
 ## Source: SECURITY.md
 
@@ -697,9 +709,9 @@ Do not open a public issue for a suspected vulnerability. Follow
 
 ## Supported Versions
 
-Before `v1.0.0`, security fixes are applied to the latest revision of
-`main`. After the first stable release, supported release lines and
-end-of-support dates will be documented here.
+Security fixes are applied to the latest stable v1 release and `main`.
+Additional supported release lines and end-of-support dates will be documented
+here when offered.
 
 ## Reporting A Vulnerability
 
@@ -765,6 +777,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-25
+
 ### Documentation
 
 - Replace obsolete standalone-repository links and workflow claims with
@@ -779,6 +793,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Publish the module from its standalone `github.com/faustbrian/go-tabular` identity while preserving its documented API and behavior.
 - Added the `GO-SAFETY-1` ownership, concurrency, race, fuzz, resource, and
   benchmark standard with an executable `make safety` gate.
 - Moved AI planning and hardening briefs into `.ai/` and clarified the
@@ -831,7 +846,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/go-tabular/commits/main
+[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v1.0.0
 
 ## Source: docs/behavior-and-limits.md
 

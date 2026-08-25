@@ -1,4 +1,4 @@
-# tabular
+# go-tabular
 
 > Documentation map for package users, adopters, operators, and contributors.
 
