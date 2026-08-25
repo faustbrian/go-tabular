@@ -7,6 +7,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-25
+
 ### Changed
 
 - Validate action pinning from the standalone repository root and leave
@@ -26,8 +28,6 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Harden standalone documentation validation with deterministic spelling and
   link checks, package-specific documentation gates, and repository-local
   contributor guidance.
-
-## [1.0.0] - 2026-08-25
 
 ### Documentation
 
