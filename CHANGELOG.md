@@ -9,6 +9,9 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Validate action pinning from the standalone repository root and leave
+  repository-foundation policy to the authoritative repository contract.
+
 - Exclude intentional nested modules from root local-proxy archives so local,
   bootstrap, CI, and public module checksums describe the same source
   boundary.
