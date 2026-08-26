@@ -19,5 +19,5 @@ authorization, durable storage, or business-level schema validation. Reject
 unexpected formats explicitly and avoid writing archive paths to disk.
 
 See [behavior and limits](behavior-and-limits.md) and
-[hardening](hardening.md). Report vulnerabilities through
+[behavior and limits](behavior-and-limits.md). Report vulnerabilities through
 [SECURITY.md](../SECURITY.md).
