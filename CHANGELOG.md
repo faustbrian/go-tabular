@@ -9,6 +9,9 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
+- Clarify how shared safety-policy updates are coordinated across standalone
+  repositories.
+
 - Replace archived monorepo links and completed execution artifacts with a
   standalone, human-oriented documentation structure.
 
