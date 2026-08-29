@@ -77,9 +77,8 @@ See [formats](docs/formats.md) and
 Start with the [documentation index](docs/README.md), [quickstart](docs/quickstart.md),
 [adoption guide](docs/adoption.md), and [API reference](docs/api.md). Review
 [performance](docs/performance.md), [security](docs/security.md), and
-[hardening](docs/hardening.md) before accepting hostile files.
+[behavior and limits](docs/behavior-and-limits.md) before accepting hostile files.
 
-AI tools can use [llms.txt](llms.txt) and [llms-full.txt](llms-full.txt).
 Release history is maintained in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
@@ -104,8 +103,3 @@ Review [docs/security.md](docs/security.md) before ingesting untrusted files.
 `tabular` is available under the [Apache License 2.0](LICENSE). XLS
 provenance and third-party attribution are recorded in [NOTICE](NOTICE) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-## Ecosystem
-
-Use the [Golib documentation portal](https://github.com/faustbrian/golib/blob/main/docs/index.md)
-to choose companion packages, supported stacks, recipes, and operations guidance.

@@ -7,6 +7,21 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Maintenance
+
+- Replace copied repository-local verification tooling with the released
+  `go-library-tools` v1.0.6 workflow while preserving package-owned fixtures,
+  mutation evidence, API compatibility, fuzzing, benchmark, and documentation
+  gates.
+
+### Documentation
+
+- Clarify how shared safety-policy updates are coordinated across standalone
+  repositories.
+
+- Replace archived monorepo links and completed execution artifacts with a
+  standalone, human-oriented documentation structure.
+
 ## [1.0.0] - 2026-08-25
 
 ### Changed
@@ -34,7 +49,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Replace obsolete standalone-repository links and workflow claims with
   monorepo-canonical targets and current release guidance.
 
-- Link the package README to the repository-wide Golib documentation portal.
+- Link the package README to package-owned documentation.
 
 ### Compatibility
 
