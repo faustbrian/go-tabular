@@ -10,7 +10,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Maintenance
 
 - Replace copied repository-local verification tooling with the released
-  `go-library-tools` v1.0.6 workflow while preserving package-owned fixtures,
+  `go-library-tools` v1.0.13 workflow while preserving package-owned fixtures,
   mutation evidence, API compatibility, fuzzing, benchmark, and documentation
   gates.
 
