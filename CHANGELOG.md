@@ -7,6 +7,20 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Specification Decisions
+
+- Publish the [specification decision register](docs/specification-decisions.md),
+  pinned authorities, conformance bindings, monitoring, and append-only history
+  for CSV, XLS, and XML/ZIP-backed XLSX ingestion boundaries.
+- TABULAR-DEC-001 sha256:5fd9461c00ba1d4c76d539666f3281ffb1062bcc49cf3cbf491143b5292870ad
+- TABULAR-DEC-002 sha256:f9ee61e1ce837b4d533539705dfb59ae3b5dd03ee5489e3b5ce947ef552a4132
+- TABULAR-DEC-003 sha256:c4c188ea089bd489be9204a4c6e642761cb28ffc5b859f94aa1e54f487768652
+- TABULAR-DEC-004 sha256:57ad86da0ea0669cbe31986f82d7b1ee86b568a3161e0a4aa7db5995f803821b
+- TABULAR-DEC-005 sha256:5d94938190a0017bdd9b95c45b6b0856b079952e934d80e002c7f61781cc2521
+- TABULAR-DEC-006 sha256:ee666df9d8ec0ff1c0a889d19237510505ee986b16ef18ffb2d071c088e8601e
+- TABULAR-DEC-007 sha256:e7b03868875fab2883c7479e1622d8871f259e79d53889626805e0acdcdbfa21
+- TABULAR-DEC-008 sha256:8b8e401a301548e4ccd3c47454f773dbbcacadcf3c97f1ae2517c71f1389699e
+
 ### Maintenance
 
 - Replace copied repository-local verification tooling with the released
