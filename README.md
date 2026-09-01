@@ -80,6 +80,8 @@ Start with the [documentation index](docs/README.md), [quickstart](docs/quicksta
 [behavior and limits](docs/behavior-and-limits.md) before accepting hostile files.
 
 Release history is maintained in [CHANGELOG.md](CHANGELOG.md).
+Specification-backed behavior and delegated parser boundaries are recorded in
+the [specification decision register](docs/specification-decisions.md).
 
 ## Development
 

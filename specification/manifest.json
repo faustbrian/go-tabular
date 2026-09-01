@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-08-30",
+  "sources": [
+    {"id":"rfc4180","version":"RFC 4180","url":"https://www.rfc-editor.org/rfc/rfc4180.txt","sha256":"5d9ec035aa40c0108362cb767c9e2d08c30f7225cb2a4715f484cb13c29b5f21"},
+    {"id":"ms-cfb-12.0","version":"12.0 (2024-04-23)","url":"https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5bMS-CFB%5d.pdf","sha256":"9d0d61e34495347ee32f3de5b06f2d59953cc60607ea72605d4162d21a34863f"},
+    {"id":"ms-xls-12.2","version":"12.2 (2025-08-19)","url":"https://officeprotocoldocs-f5hpbjgea6b8gneq.b02.azurefd.net/files/MS-XLS/%5bMS-XLS%5d.pdf","sha256":"5711b0c9d3ca5821d4a7649c6e1abd0762228f7909311aeb86e90d72f64055b2"},
+    {"id":"ms-oi29500-25.0","version":"25.0 (2026-08-18)","url":"https://officeprotocoldocs-f5hpbjgea6b8gneq.b02.azurefd.net/files/MS-OI29500/%5bMS-OI29500%5d.pdf","sha256":"b297063cce0ac79d10a8efd382b0f90f3b9fd6615fac7f01c88f0288e5fa7372"},
+    {"id":"ecma-376-fifth-edition","version":"Fifth Edition, December 2016","url":"https://ecma-international.org/publications-and-standards/standards/ecma-376/","sha256":"5599117b2797cfe51b7a8751681177c5ddf48777b41b42145fb9d649cc33bbba"},
+    {"id":"xml-1.0-fifth-edition","version":"Fifth Edition, 2008-11-26","url":"https://www.w3.org/TR/2008/REC-xml-20081126/","sha256":"f58a4b9e1e5b8bac13fb55c4e5c7c8c5e2c176aa45ee68e2f1ab2498511927ec"},
+    {"id":"pkware-appnote-6.3.10","version":"6.3.10 (2022-11-01)","url":"https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT","sha256":"0b993022a7d320a0bf704e6980bea36fafd17a6066ab994db0a0c16278a50cd6"}
+  ],
+  "delegates": [
+    {"id":"go-encoding-csv","version":"go1.26.6","url":"https://pkg.go.dev/encoding/csv","module":"standard library","contract":"RFC 4180-style record parsing with documented Go deviations"},
+    {"id":"excelize","version":"v2.11.0","url":"https://github.com/qax-os/excelize/tree/v2.11.0","module":"github.com/xuri/excelize/v2","go_sum":"h1:HxaEFl6sRN2+8J5a8HaKq+0M4FsjBGMnWWtjOCPSG88=","license_url":"https://raw.githubusercontent.com/qax-os/excelize/v2.11.0/LICENSE","license_sha256":"0b8e4f8789b88fa44dee713d934e4d36f52854b33670ab4a0ce3de69e8e224cd"}
+  ],
+  "fixtures": [
+    {"id":"millken-xls-table","source":"https://github.com/millken/xls/blob/c5f78026ef7fc3e270301ec14176e1b635fdbcbd/testdata/table.xls","revision":"c5f78026ef7fc3e270301ec14176e1b635fdbcbd","path":"testdata/spreadsheet/table.xls","sha256":"73ab13e7a2874023c2f3cde09eb9ec6f0e4e4c195c1c76156dc91f1633116a3e"},
+    {"id":"owned-xlsx-sample","source":"repository fixture","path":"testdata/spreadsheet/sample.xlsx","sha256":"7674793c1dac855989763e4fc04975b3a890eac3f91a7452d0dae7ee5e691d3b"},
+    {"id":"owned-csv-realistic","source":"repository fixture","path":"testdata/delimited/realistic.csv","sha256":"999bbf2799de69ee8fdbe5f6ec4c29c1b059328fc9423c61deadacf981586c58"},
+    {"id":"owned-csv-semicolon","source":"repository fixture","path":"testdata/delimited/semicolon.csv","sha256":"59ff1c42e6914b66632055a55620e7e9edf8c971331d15263b8e65d42fc7ea93"}
+  ]
+}

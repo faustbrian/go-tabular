@@ -52,10 +52,27 @@
       "required_services": [],
       "build_tags": [],
       "test_tags": [],
-      "interoperability_tools": [],
-      "specifications": [],
-      "conformance_corpora": [],
-      "provenance": [],
+      "interoperability_tools": [
+        "Go encoding/csv go1.26.6",
+        "Excelize v2.11.0",
+        "millken/xls v1.1.0 fixture"
+      ],
+      "specifications": [
+        "RFC 4180 CSV",
+        "MS-CFB 12.0",
+        "MS-XLS 12.2",
+        "ECMA-376 Fifth Edition and MS-OI29500 25.0",
+        "XML 1.0 Fifth Edition",
+        "PKWARE APPNOTE 6.3.10"
+      ],
+      "conformance_corpora": [
+        "Repository-authored CSV fixtures",
+        "Pinned millken/xls BIFF8 workbook fixture",
+        "Repository-owned OOXML workbook and hostile package fixtures"
+      ],
+      "provenance": [
+        "specification/manifest.json"
+      ],
       "goal_files": [],
       "goal_status": "not-applicable",
       "goal_evidence": [],
