@@ -23,12 +23,21 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Maintenance
 
+- Adopt the `go-library-tools` v1.3.0 schema-v2 cohesion contract and local
+  `make cohesion` gate without changing the tabular API or runtime behavior.
+- Pin reusable CI to the v1.3.0 workflow and enforce cohesion metadata in the
+  repository's required CI contract.
+
 - Replace copied repository-local verification tooling with the released
   `go-library-tools` v1.2.0 specification-governance workflow while preserving
   package-owned fixtures, mutation evidence, API compatibility, fuzzing,
   benchmark, and documentation gates.
 
 ### Documentation
+
+- Publish the module's family, capabilities, ownership, lifecycle, supported
+  environments, package selection, and delivery status, and link the README to
+  the immutable v1.3.0 ecosystem index and family guidance.
 
 - Clarify how shared safety-policy updates are coordinated across standalone
   repositories.
