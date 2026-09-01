@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "repository": "github.com/faustbrian/go-tabular",
   "go_version": "1.26.6",
   "modules": [
@@ -76,6 +76,87 @@
       "goal_files": [],
       "goal_status": "not-applicable",
       "goal_evidence": [],
+      "cohesion": {
+        "family": "integration-and-data-movement",
+        "secondary_capabilities": [
+          "data-encoding",
+          "protocols-and-schemas"
+        ],
+        "responsibility": "Provide explicit, bounded ingestion for delimited, fixed-width, XLS, XLSX, and ZIP-backed tabular sources.",
+        "non_goals": [
+          "Auto-detect source formats.",
+          "Convert input values implicitly.",
+          "Export or rewrite tabular sources."
+        ],
+        "public_package_identifier": "tabular",
+        "primary_entry_packages": [
+          "github.com/faustbrian/go-tabular"
+        ],
+        "package_selection": {
+          "github.com/faustbrian/go-tabular": "Use for explicit, bounded tabular ingestion from caller-provided readers and random-access sources."
+        },
+        "lifecycle_status": "active",
+        "maturity": "stable",
+        "construction_styles": [
+          "new-config",
+          "open",
+          "plain-function"
+        ],
+        "lifecycle_styles": [
+          "close",
+          "stateless"
+        ],
+        "ownership": {
+          "configuration": "caller",
+          "mutable_inputs": [
+            "borrow",
+            "copy"
+          ],
+          "runtime_resources": "caller",
+          "background_work": "none"
+        },
+        "optional_owned_dependencies": [],
+        "adapters": [],
+        "companions": [],
+        "supported_go": {
+          "minimum": "1.26.6",
+          "tested": [
+            "1.26.6"
+          ]
+        },
+        "supported_platforms": [
+          "portable-go"
+        ],
+        "supported_backends": [],
+        "supported_protocols": [
+          "ecma-376",
+          "ms-cfb-12",
+          "ms-oi29500-25",
+          "ms-xls-12",
+          "pkware-appnote-6-3-10",
+          "rfc-4180-csv",
+          "xml-1"
+        ],
+        "documentation": {
+          "readme": "README.md",
+          "api": "docs/api.md",
+          "adoption": "docs/adoption.md",
+          "security": "docs/security.md",
+          "compatibility": "docs/compatibility.md",
+          "performance": "docs/performance.md",
+          "examples": "docs/examples.md",
+          "faq": "docs/faq.md",
+          "changelog": "CHANGELOG.md",
+          "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-tabular",
+          "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.3.0/docs/ecosystem/README.md"
+        },
+        "known_good_compatibility_sets": [],
+        "delivery": {
+          "implementation": "not-started",
+          "hardening": "not-started",
+          "release": "not-started"
+        }
+      },
       "gates": {
         "api_compatibility": true,
         "benchmarks": true,
