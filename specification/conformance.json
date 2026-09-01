@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "decisions": [
+    {
+      "id": "TABULAR-DEC-001",
+      "authoritative_sources": ["rfc4180-source"],
+      "executable_evidence": ["TestDelimitedReaderStreamsFixtureWithNormalizedHeader", "TestDelimitedReaderReportsMalformedAndWrongShapeRows", "TestDelimitedReaderCanUseLazyQuotesExplicitly"],
+      "fixtures": ["testdata/delimited/realistic.csv", "testdata/delimited/malformed.csv"],
+      "fuzz": ["FuzzDelimitedReader"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["CSV grammar follows the pinned Go encoding/csv delegate without a strict RFC 4180 claim."]
+    },
+    {
+      "id": "TABULAR-DEC-002",
+      "authoritative_sources": ["rfc4180-source"],
+      "executable_evidence": ["TestDelimitedReaderSupportsSemicolonAndComments", "TestDelimitedReaderEnforcesRecordAndFieldLimits", "TestDelimitedRecordLimitReaderBoundsBeforeParserAllocation", "TestDelimitedReaderValidatesConfiguration"],
+      "fixtures": ["testdata/delimited/semicolon.csv", "testdata/delimited/large.csv"],
+      "fuzz": ["FuzzDelimitedReader"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["Delimited profiles and logical-record limits are explicit repository policy."]
+    },
+    {
+      "id": "TABULAR-DEC-003",
+      "authoritative_sources": ["rfc4180-source"],
+      "executable_evidence": ["TestDelimitedReaderPreservesHeaderErrorsAndConfiguration", "TestDelimitedReaderDefaultPathAvoidsNormalizationAllocation", "TestNormalizeHeaderRejectsEmptyAndDuplicateNames", "TestNormalizeRowAppliesOnlyConfiguredChanges"],
+      "fixtures": ["testdata/delimited/realistic.csv"],
+      "fuzz": ["FuzzDelimitedReader"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["Header consumption, row shape, and normalization are caller-selected repository policy."]
+    },
+    {
+      "id": "TABULAR-DEC-004",
+      "authoritative_sources": ["ms-cfb-source"],
+      "executable_evidence": ["TestOpenWorkbookStreamRequiresWorkbookDirectory", "TestXLSReaderReportsMissingSheetsAndBrokenWorkbooks", "TestXLSReaderEnforcesMaterializationLimit"],
+      "fixtures": ["testdata/spreadsheet/table.xls", "testdata/spreadsheet/malformed.xls"],
+      "fuzz": ["FuzzOpenXLS"],
+      "interoperability_evidence": ["testdata/spreadsheet/table.xls"],
+      "interoperability_classification": "provider agreement",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["XLS input requires a valid bounded OLE Workbook or Book stream."]
+    },
+    {
+      "id": "TABULAR-DEC-005",
+      "authoritative_sources": ["ms-xls-source"],
+      "executable_evidence": ["TestParseBIFF8ValidatesGlobalsAndBuildsWorkbook", "TestParseSheetDecodesSupportedCellRecords", "TestParseSheetPreservesBlankCellRecords", "TestXLSReaderPreservesStoredCellPresence", "TestXLSReaderIngestsRealWorkbookFixture"],
+      "fixtures": ["testdata/spreadsheet/table.xls"],
+      "fuzz": ["FuzzOpenXLS"],
+      "interoperability_evidence": ["testdata/spreadsheet/table.xls"],
+      "interoperability_classification": "provider agreement",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["XLS supports a strict read-only BIFF8 ingestion subset without formula or macro execution."]
+    },
+    {
+      "id": "TABULAR-DEC-006",
+      "authoritative_sources": ["ooxml-source"],
+      "executable_evidence": ["TestXLSXReaderStreamsRawFixtureRows", "TestXLSXReaderRejectsOrPreservesCellErrorsExplicitly", "TestXLSXRowSourceSkipsCellTypeLookupForOrdinaryValues"],
+      "fixtures": ["testdata/spreadsheet/sample.xlsx"],
+      "fuzz": ["FuzzOpenSpreadsheet"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["XLSX raw cell-value decoding delegates to pinned Excelize."]
+    },
+    {
+      "id": "TABULAR-DEC-007",
+      "authoritative_sources": ["ooxml-source"],
+      "executable_evidence": ["TestXLSXPresenceSelectsWorksheetRelationships", "TestXLSXPresenceSourceStreamsMissingAndDeclaredRows", "TestXLSXPresenceSourceRejectsMalformedRowsAndCells", "TestXLSXReaderPreservesAbsentAndExplicitEmptyCells", "TestXLSXReaderPadsMissingRowsWithAbsentCells"],
+      "fixtures": ["testdata/spreadsheet/sample.xlsx", "testdata/spreadsheet/malformed.xlsx"],
+      "fuzz": ["FuzzOpenSpreadsheet"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["XLSX worksheet relationships and opt-in stored-cell presence are locally enforced."]
+    },
+    {
+      "id": "TABULAR-DEC-008",
+      "authoritative_sources": ["zip-source"],
+      "executable_evidence": ["TestOpenZIPRejectsUnsafeAndDuplicateNames", "TestZIPArchiveExactResourceBoundaries", "TestSpreadsheetOpenExactResourceBoundaries", "TestXLSXReaderValidatesExtremeLimitsAndWorkbookStructure", "TestSpreadsheetReaderBoundsParsedRecordAndFields"],
+      "fixtures": ["testdata/spreadsheet/malformed.xlsx", "testdata/archive/broken.zip"],
+      "fuzz": ["FuzzOpenSpreadsheet", "FuzzOpenZIP"],
+      "interoperability_evidence": [],
+      "interoperability_classification": "not assessed",
+      "differential_evidence": [],
+      "differential_classification": "not assessed",
+      "public_behavior": ["Spreadsheet and ZIP ingestion fails closed under explicit resource and trust policy."]
+    }
+  ]
+}
