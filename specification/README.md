@@ -26,3 +26,6 @@ as an independently executed maintained-peer differential.
 The Microsoft publication PDFs exceed the online checker's bounded authority
 size, so `manifest.json` pins their exact bytes while `monitoring.json` checks
 the bounded Microsoft publication and release pages for upstream change.
+
+Append-only upstream dispositions are recorded in
+[`review-history.md`](review-history.md).

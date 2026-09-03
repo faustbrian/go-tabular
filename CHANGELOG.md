@@ -35,6 +35,10 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
+- Record the behavior-neutral 2026-09-03 review of unchanged Microsoft format
+  PDFs and PKWARE APPNOTE 6.3.10 content, while refreshing only the mutable
+  landing-page monitoring digests for TABULAR-DEC-004 through TABULAR-DEC-008.
+
 - Publish the module's family, capabilities, ownership, lifecycle, supported
   environments, package selection, and delivery status, and link the README to
   the immutable v1.3.0 ecosystem index and family guidance.
