@@ -23,6 +23,11 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Maintenance
 
+- Upgrade the checksum-pinned `go-library-tools` CLI and reusable CI workflow
+  to immutable v1.4.0 W14 enforcement while retaining the schema-v2 cohesion
+  contract, local `make cohesion` entry point, package-owned gates, and online
+  specification authority monitoring in `make ci`.
+
 - Adopt the `go-library-tools` v1.3.0 schema-v2 cohesion contract and local
   `make cohesion` gate without changing the tabular API or runtime behavior.
 - Pin reusable CI to the v1.3.0 workflow and enforce cohesion metadata in the
@@ -35,9 +40,18 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
-- Record the behavior-neutral 2026-09-03 review of unchanged Microsoft format
-  PDFs and PKWARE APPNOTE 6.3.10 content, while refreshing only the mutable
-  landing-page monitoring digests for TABULAR-DEC-004 through TABULAR-DEC-008.
+- Record the behavior-neutral 2026-09-04 re-review of unchanged Microsoft
+  format PDFs after recurring landing-page presentation changes, retaining the
+  existing TABULAR-DEC-004 through TABULAR-DEC-007 decisions and bindings.
+
+- Link ecosystem and Integration and data movement family guidance to the
+  immutable v1.4.0 documentation release.
+
+- Record the behavior-neutral review of unchanged Microsoft format PDFs and
+  PKWARE APPNOTE 6.3.10 content. Refresh the Microsoft landing-page monitoring
+  digests and replace the mutable PKWARE product page with its current general
+  APPNOTE payload as the release-change monitor for TABULAR-DEC-004 through
+  TABULAR-DEC-008.
 
 - Publish the module's family, capabilities, ownership, lifecycle, supported
   environments, package selection, and delivery status, and link the README to
