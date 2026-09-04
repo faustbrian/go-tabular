@@ -80,8 +80,8 @@ Start with the [documentation index](docs/README.md), [quickstart](docs/quicksta
 [behavior and limits](docs/behavior-and-limits.md) before accepting hostile files.
 
 For ecosystem-wide selection and ownership guidance, see the versioned
-[Golib ecosystem index](https://github.com/faustbrian/go-library-tools/blob/v1.3.0/docs/ecosystem/README.md)
-and its [Integration and data movement family](https://github.com/faustbrian/go-library-tools/blob/v1.3.0/docs/ecosystem/design-language.md#package-families-and-selection).
+[Golib ecosystem index](https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md)
+and its [Integration and data movement family](https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/design-language.md#package-families-and-selection).
 
 Release history is maintained in [CHANGELOG.md](CHANGELOG.md).
 Specification-backed behavior and delegated parser boundaries are recorded in
