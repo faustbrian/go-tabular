@@ -47,3 +47,24 @@ monitoring signals only; no normative content or package behavior changed.
 PKWARE's publication policy keeps the current general release at the stable
 `APPNOTE.TXT` path, so that payload now detects both source and release changes
 without depending on unrelated product-page presentation.
+
+## 2026-09-06
+
+The Microsoft publication pages changed again, but each still identifies the
+same published version and links the same byte-identical normative payload:
+MS-CFB 12.0 (2024-04-23) is
+`9d0d61e34495347ee32f3de5b06f2d59953cc60607ea72605d4162d21a34863f`,
+MS-XLS 12.2 (2025-08-19) is
+`5711b0c9d3ca5821d4a7649c6e1abd0762228f7909311aeb86e90d72f64055b2`,
+and MS-OI29500 25.0 (2026-08-18) is
+`b297063cce0ac79d10a8efd382b0f90f3b9fd6615fac7f01c88f0288e5fa7372`.
+
+| Authorities | Previous SHA-256 | Current SHA-256 | Semantic delta | Decisions | Conclusion |
+| --- | --- | --- | --- | --- | --- |
+| `ms-cfb-source`, `ms-cfb-releases` | `057bd660ef7946495453559e60507dcd0932bf161c635fc6d782547458972569` | `e2aee5af34c8218ff0c7da8275f16760e754bd13f3b42efc68ad1b32c9aea3dd` | Microsoft landing-page presentation changed; the published version, date, and pinned MS-CFB 12.0 PDF did not. | TABULAR-DEC-004 | Behavior-neutral; retain the decision and conformance binding. |
+| `ms-xls-source`, `ms-xls-releases` | `4cd1395ec7744fff92ba03c53881ebe5f6ca07ec045fe2e02f4a48b2dda4b23a` | `f1721447ad7a0821680968f8eff03de3490799165a58aa58a974a0d9414d6d37` | Microsoft landing-page presentation changed; the published version, date, and pinned MS-XLS 12.2 PDF did not. | TABULAR-DEC-005 | Behavior-neutral; retain the decision and conformance binding. |
+| `ooxml-source`, `ooxml-releases` | `e34908432b10f3c71cebd683edd17be844d888b5864752ecc3a01464adfde3fb` | `765e936bcffe39c1a6557c62fd670dd602c56b77cc96ea1960a9b41eddf4d4e7` | Microsoft landing-page presentation changed; the published version, date, and pinned MS-OI29500 25.0 PDF did not. | TABULAR-DEC-006, TABULAR-DEC-007 | Behavior-neutral; retain both decisions and conformance bindings. |
+
+Each landing-page digest was retrieved three times with the specification
+checker's request profile and was stable. These remain monitoring signals only;
+no normative content or package behavior changed.
