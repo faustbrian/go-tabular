@@ -40,6 +40,9 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
+- Correct the repository standards to Go 1.26.6 and replace the pre-release
+  export roadmap wording with the published v1.0.0 boundary.
+
 - Record the behavior-neutral 2026-09-04 re-review of unchanged Microsoft
   format PDFs after recurring landing-page presentation changes, retaining the
   existing TABULAR-DEC-004 through TABULAR-DEC-007 decisions and bindings.

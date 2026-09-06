@@ -18,8 +18,8 @@ to avoid adding an unmaintained module and its transitive supply-chain surface.
 
 ## Does the package export files?
 
-Not in the first release. Export helpers remain a separately evaluated roadmap
-item; importing and exporting have different correctness contracts.
+No. Export helpers are not part of v1.0.0 and remain a separately evaluated
+roadmap item; importing and exporting have different correctness contracts.
 
 ## Are numbers typed?
 

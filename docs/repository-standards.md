@@ -31,8 +31,8 @@ concepts.
 ## Mandatory Automation
 
 Every repository provides pinned-SHA workflows for CI, benchmarks, scheduled
-fuzzing, security, and tagged releases. CI tests Go 1.25.x as the supported
-minimum line and current stable Go. Dependency review runs on pull requests;
+fuzzing, security, and tagged releases. CI tests Go 1.26.6 as the supported
+minimum. Dependency review runs on pull requests;
 reachable dependency scanning uses `govulncheck`.
 
 The common Make interface is `format`, `format-check`, `test`,
