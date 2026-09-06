@@ -40,6 +40,10 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
+- Record the behavior-neutral 2026-09-06 re-review of unchanged MS-CFB 12.0,
+  MS-XLS 12.2, and MS-OI29500 25.0 normative content after further Microsoft
+  landing-page presentation changes.
+
 - Correct the repository standards to Go 1.26.6 and replace the pre-release
   export roadmap wording with the published v1.0.0 boundary.
 
