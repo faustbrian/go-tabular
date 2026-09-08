@@ -4,6 +4,10 @@ The authoritative signature documentation is available through
 `go doc github.com/faustbrian/go-tabular`. This page groups the surface by
 task and records compatibility-sensitive semantics.
 
+The repository has one public package and no public subpackages, adapters, or
+test-helper packages. The `internal/xls` implementation cannot be imported by
+consumers.
+
 ## Rows and normalization
 
 - `Row []string`: ordered source fields.
@@ -67,3 +71,22 @@ Stable kinds are `ErrorInvalidConfig`, `ErrorInvalidHeader`,
 `ErrorDuplicateHeader`, `ErrorMalformedRow`, `ErrorInvalidEncoding`,
 `ErrorInvalidLayout`, `ErrorArchive`, `ErrorEntryNotFound`,
 `ErrorLimitExceeded`, and `ErrorSpreadsheet`.
+
+Wrapped causes can contain source-controlled parser details or caller-provided
+archive names. Match `ErrorKind` for control flow and sanitize complete error
+strings before placing them in logs, traces, or responses.
+
+## Lifecycle And Concurrency
+
+- Delimited and fixed-width readers borrow their `io.Reader`; they have no
+  `Close` method and do not close the source.
+- `OpenZIP` borrows its `io.ReaderAt`. Callers close every successful
+  `ZIPArchive.Open` result; `Extract` closes its own temporary entry reader.
+- `OpenSpreadsheet` never closes its `io.ReaderAt`. XLS is fully consumed by
+  the open call. Keep XLSX sources available until `SpreadsheetReader.Close`
+  because presence-aware iteration retains archive entry readers. Closing the
+  spreadsheet reader releases only package-owned iterator resources.
+- Reader methods mutate cursor/header state and are not safe for concurrent
+  calls. The package starts no goroutines and exposes no channels or callbacks.
+- Parsing is synchronous and intentionally context-free. Cancellation and
+  deadlines must be implemented by the source or caller.

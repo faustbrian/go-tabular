@@ -24,6 +24,13 @@ api:
 
 operations:
   - module: .
+    gate: docs
+    steps:
+      - type: make
+        makefile: Makefile
+        target: docs
+        timeout: 20m
+  - module: .
     gate: interoperability
     steps:
       - type: go-test

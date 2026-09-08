@@ -7,8 +7,10 @@ configuration meaning are compatibility-sensitive.
 
 Every release requires a changelog entry, green CI, 100% production-statement
 coverage, fuzz-target smoke verification, benchmarks, vulnerability scanning,
-and documentation examples. Tags use `vMAJOR.MINOR.PATCH` and the release
-workflow publishes release notes from the corresponding changelog section.
+and documentation examples. Tags use `vMAJOR.MINOR.PATCH`. A maintainer creates
+the signed annotated tag and publishes the GitHub release manually under the
+[release process](releasing.md); this repository does not currently automate
+release publication.
 
 Breaking changes must describe the old and new row/error behavior and provide
 migration guidance. Security releases may omit exploit details until users

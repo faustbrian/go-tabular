@@ -1,49 +1,33 @@
-# End-to-end examples
+# Executable examples
+
+All supported examples are compiler-checked in
+[`example_test.go`](../example_test.go) and run during the documentation gate.
+They use the public package from `tabular_test`, so they exercise the same API
+available to consumers.
+
+Run every example:
+
+```sh
+go test github.com/faustbrian/go-tabular -run '^Example' -v
+```
+
+## Delimited and fixed-width input
+
+- [`ExampleNewDelimitedReader`](../example_test.go) demonstrates a bounded
+  semicolon-delimited import, header validation, `io.EOF`, and error handling.
+- [`ExampleNewFixedWidthReader`](../example_test.go) demonstrates explicit byte
+  ranges and whitespace trimming.
 
 ## ZIP-backed semicolon import
 
-```go
-archive, err := tabular.OpenZIP(file, size, tabular.ZIPConfig{
-    MaxEntries: 20, MaxEntryBytes: 64 << 20, MaxTotalBytes: 64 << 20,
-})
-if err != nil { return err }
-
-entry, err := archive.Open("orders.csv")
-if err != nil { return err }
-defer entry.Close()
-
-reader, err := tabular.NewDelimitedReader(entry, tabular.DelimitedConfig{
-    Delimiter: ';', AllowVariableFields: false, FieldsPerRecord: 4,
-})
-```
+[`ExampleOpenZIP`](../example_test.go) opens a caller-owned archive source with
+explicit entry, expanded-byte, compression-ratio, and symlink limits. It opens
+and closes one exact entry and passes it to a bounded delimited reader.
 
 ## Spreadsheet import
 
-```go
-reader, err := tabular.OpenSpreadsheet(file, size, tabular.SpreadsheetConfig{
-    Format: tabular.FormatXLSX,
-    Sheet: "Orders",
-    Header: &tabular.HeaderConfig{RejectEmpty: true, RejectDuplicates: true},
-    MaxRecordBytes: 64 << 10,
-    MaxFieldBytes: 16 << 10,
-    MaxSheets: 8,
-    PreserveCellPresence: true,
-    ZIP: tabular.ZIPConfig{
-        MaxEntryBytes: 32 << 20,
-        MaxTotalBytes: 64 << 20,
-        MaxCompressionRatio: 100,
-        RejectSymlinks: true,
-    },
-})
-if err != nil { return err }
-defer reader.Close()
-
-row, err := reader.ReadCells()
-if err != nil { return err }
-if !row[0].Present() {
-    // The workbook omitted this position; Value returns "".
-}
-```
-
-Complete compilable delimited and fixed-width examples live in
-`example_test.go` and are executed by `go test`.
+[`ExampleOpenSpreadsheet`](../example_test.go) opens a caller-owned XLSX source,
+selects a sheet, configures archive and parsed-value limits, validates the
+header, reads a row, and closes the spreadsheet reader. Presence-sensitive
+imports additionally set `PreserveCellPresence` and use `ReadCells` as
+described in [behavior and limits](behavior-and-limits.md#spreadsheet-limits).
