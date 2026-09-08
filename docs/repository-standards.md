@@ -30,14 +30,16 @@ concepts.
 
 ## Mandatory Automation
 
-Every repository provides pinned-SHA workflows for CI, benchmarks, scheduled
-fuzzing, security, and tagged releases. CI tests Go 1.26.6 as the supported
-minimum. Dependency review runs on pull requests;
-reachable dependency scanning uses `govulncheck`.
+This repository uses one pinned reusable CI workflow for pull requests, main,
+scheduled verification, and manually dispatched release rehearsal. It does not
+currently automate tag or release publication. CI tests Go 1.26.6 as the
+supported minimum. The shared gate includes dependency and reachable
+vulnerability checks.
 
-The common Make interface is `format`, `format-check`, `test`,
-`test-race`, `coverage`, `vet`, `lint`, `fuzz`, `benchmark`,
-`safety`, `docs`, `vuln`, `check`, and semantic release targets.
+The public Make interface is `check`, `ci`, `cohesion`, `docs`, `inventory`,
+`repository-check`, `specification-check`, and `workflows`. The shared `golib`
+tool owns the underlying format, test, race, coverage, lint, fuzz, mutation,
+documentation, API, security, and benchmark gates.
 
 The package family shares the `GO-SAFETY-1` baseline. It forbids `unsafe`,
 cgo, and `go:linkname` in production code and standardizes ownership,

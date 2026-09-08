@@ -40,6 +40,14 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Documentation
 
+- Complete the package documentation contract with compiler-checked quick
+  starts for delimited, fixed-width, ZIP-backed, and spreadsheet ingestion;
+  explicit package, lifecycle, cancellation, resource, and concurrency
+  ownership; accurate release guidance and delivery metadata; direct support
+  and security routes; and the correct Apache-2.0 badge.
+- Replace the completed first-release roadmap with the published v1 boundary,
+  and correct the `v1.0.0` release date to its 2026-08-26 publication date.
+
 - Record the behavior-neutral 2026-09-06 re-review of unchanged MS-CFB 12.0,
   MS-XLS 12.2, and MS-OI29500 25.0 normative content after further Microsoft
   landing-page presentation changes.
@@ -70,7 +78,7 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Replace archived monorepo links and completed execution artifacts with a
   standalone, human-oriented documentation structure.
 
-## [1.0.0] - 2026-08-25
+## [1.0.0] - 2026-08-26
 
 ### Changed
 

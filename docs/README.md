@@ -32,3 +32,11 @@ Use this index to select a tabular format and define safe ingest limits.
 - [Repository standards](repository-standards.md)
 - [Contributing](../CONTRIBUTING.md)
 - [Release history](../CHANGELOG.md)
+- [License](../LICENSE)
+- [Support](../SUPPORT.md)
+- [Security reporting](../SECURITY.md)
+
+For ecosystem navigation, use the versioned
+[Golib ecosystem index](https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md)
+and the
+[Integration and data movement family](https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/design-language.md#package-families-and-selection).

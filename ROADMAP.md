@@ -1,13 +1,15 @@
 # Roadmap
 
-## First stable release
+## Published v1 foundation
 
-- complete and verify the CSV, XLS, XLSX, fixed-width, and ZIP-backed ingest
-  surface;
-- complete CI, security, documentation, and tagged-release automation;
-- publish benchmark baselines and compatibility promises;
-- resolve API feedback found during real service adoption;
-- tag `v1.0.0` only when no known supported-format gap remains.
+`v1.0.0` was published on 2026-08-26 with the CSV, delimited, fixed-width,
+XLS, XLSX, and ZIP-backed ingest surface. Its release established the current
+compatibility promise, security boundary, and benchmark baseline.
+
+The repository currently has CI but no tag-triggered release workflow or local
+release command. Maintainers publish releases manually under
+[`docs/releasing.md`](docs/releasing.md); adding automation remains separate
+future work rather than delivered functionality.
 
 ## After core stabilization
 
