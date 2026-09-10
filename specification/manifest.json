@@ -11,7 +11,7 @@
     {"id":"pkware-appnote-6.3.10","version":"6.3.10 (2022-11-01)","url":"https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT","sha256":"0b993022a7d320a0bf704e6980bea36fafd17a6066ab994db0a0c16278a50cd6"}
   ],
   "delegates": [
-    {"id":"go-encoding-csv","version":"go1.26.6","url":"https://pkg.go.dev/encoding/csv","module":"standard library","contract":"RFC 4180-style record parsing with documented Go deviations"},
+    {"id":"go-encoding-csv","version":"go1.27.0","url":"https://pkg.go.dev/encoding/csv","module":"standard library","contract":"RFC 4180-style record parsing with documented Go deviations"},
     {"id":"excelize","version":"v2.11.0","url":"https://github.com/qax-os/excelize/tree/v2.11.0","module":"github.com/xuri/excelize/v2","go_sum":"h1:HxaEFl6sRN2+8J5a8HaKq+0M4FsjBGMnWWtjOCPSG88=","license_url":"https://raw.githubusercontent.com/qax-os/excelize/v2.11.0/LICENSE","license_sha256":"0b8e4f8789b88fa44dee713d934e4d36f52854b33670ab4a0ce3de69e8e224cd"}
   ],
   "fixtures": [

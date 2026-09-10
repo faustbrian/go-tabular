@@ -1,6 +1,6 @@
 module github.com/faustbrian/go-tabular
 
-go 1.26.6
+go 1.27.0
 
 require (
 	github.com/xuri/excelize/v2 v2.11.0
