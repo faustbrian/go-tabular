@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "repository": "github.com/faustbrian/go-tabular",
-  "go_version": "1.26.6",
+  "go_version": "1.27.0",
   "modules": [
     {
       "directory": ".",
       "module_path": "github.com/faustbrian/go-tabular",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "packages": [
         {
           "module_directory": ".",
@@ -53,7 +53,7 @@
       "build_tags": [],
       "test_tags": [],
       "interoperability_tools": [
-        "Go encoding/csv go1.26.6",
+        "Go encoding/csv go1.27.0",
         "Excelize v2.11.0",
         "millken/xls v1.1.0 fixture"
       ],
@@ -119,9 +119,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [

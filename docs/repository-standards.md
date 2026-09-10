@@ -32,7 +32,7 @@ concepts.
 
 This repository uses one pinned reusable CI workflow for pull requests, main,
 scheduled verification, and manually dispatched release rehearsal. It does not
-currently automate tag or release publication. CI tests Go 1.26.6 as the
+currently automate tag or release publication. CI tests Go 1.27.0 as the
 supported minimum. The shared gate includes dependency and reachable
 vulnerability checks.
 

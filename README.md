@@ -7,7 +7,7 @@
 [![Documentation](https://img.shields.io/badge/docs-checked_in_CI-blue)](docs/)
 [![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-tabular.svg)](https://pkg.go.dev/github.com/faustbrian/go-tabular)
 [![Release](https://img.shields.io/github/v/release/faustbrian/go-tabular?sort=semver)](https://github.com/faustbrian/go-tabular/releases)
-[![Go](https://img.shields.io/badge/go-1.26.6-00ADD8?logo=go)](https://go.dev/)
+[![Go](https://img.shields.io/badge/go-1.27.0-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 `tabular` provides explicit, bounded ingestion for CSV and other
@@ -21,7 +21,7 @@ benchmarked, and held to meaningful 100% production coverage.
 
 ## Requirements
 
-- Go 1.26.6 or later
+- Go 1.27.0 or later
 - portable Go targets supported by the Go toolchain; no cgo or external service
   is required
 
