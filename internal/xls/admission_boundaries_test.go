@@ -143,6 +143,28 @@ func TestBIFFPolicyAndSpanAdmissionOrder(t *testing.T) {
 	}
 }
 
+func TestBIFFWorksheetEOFOffsetCause(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		extra int
+		cause string
+	}{
+		{"at EOF", 0, "worksheet BOF not found"},
+		{"past EOF", 1, "invalid worksheet offset"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			data := singleAdmissionWorkbook(biffRecord(0x0203, numberPayload(0, 0, 1)))
+			binary.LittleEndian.PutUint32(data[12:], uint32(len(data)+test.extra))
+			for _, presence := range []bool{false, true} {
+				book, err := parseBIFF8Limited(data, presence, 1, 1)
+				if book != nil || err == nil || errors.Is(err, ErrLimit) || err.Error() != test.cause {
+					t.Fatalf("presence %v: original worksheet admission cause: %v %v", presence, book, err)
+				}
+			}
+		})
+	}
+}
+
 func TestDIFATExactPhysicalSectorCount(t *testing.T) {
 	// Two physical sectors are a complete two-link DIFAT chain. No workbook
 	// projection is involved: this is the owned physical-chain admission seam.
