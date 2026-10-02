@@ -63,6 +63,37 @@ func TestXLSXRowsRefusesUnsupportedSheetNamePrivately(t *testing.T) {
 	}
 }
 
+// Excelize translates strict namespace URI text throughout workbook XML,
+// including this malformed sheet-name value. Admission sees the original name;
+// public construction must refuse the changed projection without echoing it.
+func TestXLSXNamespaceSheetNameProjectionRefusedPrivately(t *testing.T) {
+	const name = "http://purl.oclc.org/ooxml/spreadsheetml/main"
+	base := makeErrorXLSX(t)
+	data := rewriteZIPEntry(t, base, "xl/workbook.xml", `<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="`+name+`" sheetId="1" r:id="rId1"/></sheets></workbook>`)
+	if len(base)+len(data) > 128*1024 || len(data) > 65537 {
+		t.Fatal("ordinary workbook fixture exceeds its test budget")
+	}
+	for _, presence := range []bool{false, true} {
+		reader, err := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, Sheet: name, PreserveCellPresence: presence})
+		if reader != nil {
+			if closeErr := reader.Close(); closeErr != nil {
+				t.Fatal(closeErr)
+			}
+		}
+		var detail *Error
+		if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || detail.Op != "spreadsheet.sheet" {
+			t.Fatalf("presence %v same-byte projection refusal: %v", presence, err)
+		}
+		if err.Error() != "tabular: spreadsheet.sheet xlsx: spreadsheet error" || strings.Contains(err.Error(), name) {
+			t.Fatalf("presence %v private default diagnostic: %v", presence, err)
+		}
+		cause := errors.Unwrap(err)
+		if cause == nil || cause.Error() != "sheet not found" || !errors.Is(detail.Err, cause) {
+			t.Fatalf("presence %v trusted refusal cause missing: %v", presence, cause)
+		}
+	}
+}
+
 // Refuse the old borrowed-archive reopening boundary after its two worksheet
 // admissions. Snapshot-based construction must never reach that caller read.
 type worksheetReopenFailure struct {
