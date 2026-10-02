@@ -1,6 +1,7 @@
 package tabular
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"io"
@@ -32,6 +33,19 @@ type xlsxRows interface {
 }
 
 func openXLSXRows(source io.ReaderAt, size int64, config SpreadsheetConfig) (spreadsheetRowSource, error) {
+	if err := admitZIPSource(source, size, config.ZIP); err != nil {
+		return nil, err
+	}
+	// All admission, delegate parsing and presence reads must observe this same
+	// finite revision, even if the caller later changes its borrowed source.
+	data, err := io.ReadAll(io.NewSectionReader(source, 0, size))
+	if err == nil && int64(len(data)) != size {
+		err = io.ErrUnexpectedEOF
+	}
+	if err != nil {
+		return nil, &Error{Kind: ErrorArchive, Op: "zip.open", Format: "zip", Err: err}
+	}
+	source = bytes.NewReader(data)
 	archive, err := OpenZIP(source, size, config.ZIP)
 	if err != nil {
 		return nil, err
@@ -40,6 +54,9 @@ func openXLSXRows(source io.ReaderAt, size int64, config SpreadsheetConfig) (spr
 		return nil, err
 	}
 	if err = validateXLSXWorksheets(archive); err != nil {
+		return nil, err
+	}
+	if err = validateXLSXGraph(archive, config.Sheet); err != nil {
 		return nil, err
 	}
 	maxTotal := zipLimitOrDefault(config.ZIP.MaxTotalBytes, defaultMaxZIPTotalBytes)
@@ -102,11 +119,16 @@ func zipLimitOrDefault(value, fallback uint64) uint64 {
 
 func validateXLSXSheetLimit(archive *ZIPArchive, maximum int) error {
 	if maximum == 0 {
-		return nil
+		maximum = defaultMaxSheets
 	}
 	reader, err := archive.Open("xl/workbook.xml")
 	if err != nil {
-		return err
+		return &Error{
+			Kind:   ErrorSpreadsheet,
+			Op:     "spreadsheet.validate",
+			Format: string(FormatXLSX),
+			Err:    err,
+		}
 	}
 	defer func() { _ = reader.Close() }()
 
@@ -136,7 +158,7 @@ func validateXLSXWorksheets(archive *ZIPArchive) error {
 		if err != nil {
 			return err
 		}
-		err = xml.NewDecoder(reader).Decode(&struct{}{})
+		err = decodeXLSXDocument(reader, &struct{}{})
 		_ = reader.Close()
 		if err != nil {
 			return &Error{Kind: ErrorSpreadsheet, Op: "spreadsheet.validate", Format: string(FormatXLSX), Err: err}

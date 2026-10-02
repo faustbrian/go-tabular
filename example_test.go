@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	tabular "github.com/faustbrian/go-tabular"
+	tabular "github.com/faustbrian/go-tabular/v2"
 )
 
 func ExampleNewDelimitedReader() {

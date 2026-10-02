@@ -5,7 +5,54 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] - root v2.0.0
+
+The root source tree uses the `/v2` module path. Public tags and releases
+establish availability; release gates precede publication, and maintained
+consumer adoption follows verification of the public module. Historical v1
+consumers retain their published behavior without local `replace` directives.
+
+### Security
+
+- Reject XLSX sheet names, application relationship IDs and targets rewritten
+  by the pinned parser's namespace translation, preserving admitted worksheet
+  identity.
+  Preserve strict namespace declarations and relationship-type vocabulary.
+- Require one namespace-qualified worksheet relationship identity, refusing
+  unrelated or ambiguous identity attributes before delegate parsing.
+- Snapshot XLSX sources within workbook and archive byte limits before
+  admission, parsing, and presence-aware iteration, preventing mixed source
+  revisions. Reject incomplete declared sources and retain private I/O causes.
+- TABULAR-DEC-002 sha256:193d424eb2d2d034843cebb1243585b0dd8acfa9b5c37ef8e978653a09d6d917
+- TABULAR-DEC-005 sha256:a93f6c978d4caae3bd80d5c4b8e6f23b5d256840e98e7f17be5e6074c7f01776
+- TABULAR-DEC-008 sha256:fc27a152f2251c2b4546c1ba0dbc2ea1d16f3e9668cc5f64d97cd337eb52a619
+- Omit underlying parser, source, destination, and requested-entry diagnostics
+  from default `Error` messages. Messages retain fixed category/context and
+  coordinates; explicit `Err`, `errors.Is`/`As`, and `Unwrap` inspection preserve
+  the original cause and require trusted handling.
+- Apply finite defaults to delimited and spreadsheet row and field parsing,
+  XLSX source size and worksheet counts, and ZIP source, expansion size, and
+  ratio to constrain accepted input. Explicit positive limits continue to override
+  defaults; input limits are not exact heap or I/O deadline guarantees.
+- Add `DelimitedConfig.MaxSourceBytes` (64 MiB default) across header and row
+  reads, including skipped comments and blank lines. Preserve comment/quoted
+  multiline grammar with split reads and Unicode comment markers.
+- Validate BIFF8 dimensions and admit XLS sheets plus cumulative materialized
+  slots before dense/presence allocation. `MaxMaterializedCells` defaults to
+  1,000,000 across all sheets and charges empty/absent row slots; `MaxSheets`
+  now applies to XLS as well as XLSX. Repeated/overlapping sheet offsets fail.
+- Reject external and unsafe XLSX worksheet relationships in both string-only
+  and presence-aware modes.
+- Admit OLE FAT/DIFAT counts against physical sectors before allocating indexes.
+  Reject ambiguous or noncanonical XLSX workbook graphs and validate complete
+  selected worksheet documents, including safely relocated worksheet parts.
+- This security change is prepared for v2 because it changes documented
+  zero-value behavior and adds source/materialization budget fields. Migrate
+  unkeyed `ZIPConfig`, `DelimitedConfig`, and `SpreadsheetConfig` literals to
+  keyed fields and set explicit positive limits
+  when accepted payloads exceed the new defaults.
+- TABULAR-DEC-002 sha256:bec8c6ce4f29d17394f31b0c850c1ad16e81ac80d3e831234d86fd9c10d7af33
+- TABULAR-DEC-008 sha256:de1633d5ee9a84bb8c1860a3a8226e869f99ffb0c14cccba710e66d09391513b
 
 ### Specification Decisions
 

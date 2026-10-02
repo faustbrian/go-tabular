@@ -333,7 +333,7 @@ func TestSpreadsheetReaderBoundsParsedRecordAndFields(t *testing.T) {
 			wantSuccess: Row{"ab", "toolong"},
 		},
 		{
-			name: "zero limits preserve legacy behavior",
+			name: "safe default limits allow ordinary rows",
 			config: SpreadsheetConfig{
 				Format: FormatXLSX,
 			},
@@ -371,6 +371,53 @@ func TestSpreadsheetReaderBoundsParsedRecordAndFields(t *testing.T) {
 	}
 }
 
+func TestSpreadsheetReaderAppliesSafeDefaultFieldLimit(t *testing.T) {
+	t.Parallel()
+
+	reader := newSpreadsheetReader(
+		&stubSpreadsheetSource{rows: [][]spreadsheetCell{{{
+			value: strings.Repeat("x", defaultMaxRecordBytes+1),
+		}}}},
+		SpreadsheetConfig{Format: FormatXLSX},
+	)
+	var limitError *Error
+	if _, err := reader.Read(); !errors.Is(err, ErrorLimitExceeded) ||
+		!errors.As(err, &limitError) || limitError.Field != 1 {
+		t.Fatalf("Read() error = %#v, want field 1 limit exceeded", err)
+	}
+}
+
+func TestSpreadsheetReaderAppliesSafeDefaultRecordLimit(t *testing.T) {
+	t.Parallel()
+
+	value := strings.Repeat("x", defaultMaxRecordBytes/2+1)
+	reader := newSpreadsheetReader(
+		&stubSpreadsheetSource{rows: [][]spreadsheetCell{{
+			{value: value},
+			{value: value},
+		}}},
+		SpreadsheetConfig{Format: FormatXLSX},
+	)
+	var limitError *Error
+	if _, err := reader.Read(); !errors.Is(err, ErrorLimitExceeded) ||
+		!errors.As(err, &limitError) || limitError.Field != 0 {
+		t.Fatalf("Read() error = %#v, want record limit exceeded", err)
+	}
+}
+
+func TestOpenSpreadsheetAppliesWorkbookLimitBeforeXLSXParsing(t *testing.T) {
+	t.Parallel()
+
+	_, err := OpenSpreadsheet(
+		bytes.NewReader([]byte("not a workbook")),
+		2,
+		SpreadsheetConfig{Format: FormatXLSX, MaxWorkbookBytes: 1},
+	)
+	if !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("OpenSpreadsheet() error = %v, want limit exceeded", err)
+	}
+}
+
 func TestOpenSpreadsheetSurfacesReaderAndOOXMLFailures(t *testing.T) {
 	t.Parallel()
 
@@ -382,6 +429,13 @@ func TestOpenSpreadsheetSurfacesReaderAndOOXMLFailures(t *testing.T) {
 	data := makeZIP(t, map[string]string{"placeholder": "not OOXML"})
 	if _, err := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX}); !errors.Is(err, ErrorSpreadsheet) {
 		t.Fatalf("OpenSpreadsheet(XLSX) error = %v", err)
+	}
+
+	invalidPackage := makeZIP(t, map[string]string{
+		"xl/workbook.xml": `<workbook><sheets/></workbook>`,
+	})
+	if _, err := OpenSpreadsheet(bytes.NewReader(invalidPackage), int64(len(invalidPackage)), SpreadsheetConfig{Format: FormatXLSX}); !errors.Is(err, ErrorSpreadsheet) {
+		t.Fatalf("OpenSpreadsheet(invalid XLSX package) error = %v", err)
 	}
 }
 

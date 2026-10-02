@@ -286,7 +286,7 @@ func TestXLSXMetadataExactClassificationAndReferences(t *testing.T) {
 	}
 
 	for name, workbook := range map[string]string{
-		"missing name": `<workbook><sheets><sheet id="rId1"/></sheets></workbook>`,
+		"missing name": `<workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet r:id="rId1"/></sheets></workbook>`,
 		"missing id":   `<workbook><sheets><sheet name="Sheet"/></sheets></workbook>`,
 	} {
 		archive := openTestXLSXArchive(t, makeZIP(t, map[string]string{"xl/workbook.xml": workbook}))
@@ -295,7 +295,7 @@ func TestXLSXMetadataExactClassificationAndReferences(t *testing.T) {
 		}
 	}
 	valid := openTestXLSXArchive(t, makeZIP(t, map[string]string{
-		"xl/workbook.xml": `<workbook><sheets><sheet name="Sheet" id="rId1"/></sheets></workbook>`,
+		"xl/workbook.xml": `<workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet" r:id="rId1"/></sheets></workbook>`,
 	}))
 	reference, err := selectedXLSXSheetReference(valid, "")
 	if err != nil || reference.name != "Sheet" || reference.relationshipID != "rId1" {

@@ -404,7 +404,7 @@ func TestDIFATReaderHandlesHeaderAndExtendedSectors(t *testing.T) {
 	header := make([]byte, 8)
 	binary.LittleEndian.PutUint32(header[0:4], 3)
 	binary.LittleEndian.PutUint32(header[4:8], freeSector)
-	compound := &compoundFile{data: make([]byte, 3*16), sectorSize: 16}
+	compound := &compoundFile{data: make([]byte, 7*16), sectorSize: 16}
 	sector := compound.data[16:32]
 	binary.LittleEndian.PutUint32(sector[0:4], 4)
 	binary.LittleEndian.PutUint32(sector[4:8], freeSector)
@@ -439,7 +439,7 @@ func TestDIFATReaderHandlesHeaderAndExtendedSectors(t *testing.T) {
 	}{
 		{name: "truncated end", start: endOfChain, count: 1, wanted: 2, want: "xls: truncated DIFAT chain"},
 		{name: "truncated free", start: freeSector, count: 1, wanted: 2, want: "xls: truncated DIFAT chain"},
-		{name: "outside", start: 2, count: 1, wanted: 2, want: "xls: sector outside file"},
+		{name: "outside", start: 6, count: 1, wanted: 2, want: "xls: sector outside file"},
 		{name: "cycle", start: 0, count: 2, wanted: 2, mutate: func(data []byte) { binary.LittleEndian.PutUint32(data[12:16], 0) }, want: "xls: cyclic DIFAT chain"},
 		{name: "incomplete", start: 0, count: 1, wanted: 4, want: "xls: incomplete FAT index"},
 	}

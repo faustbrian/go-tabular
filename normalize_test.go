@@ -106,7 +106,7 @@ func TestErrorExposesStableKindAndContext(t *testing.T) {
 	if !errors.Is(err, cause) {
 		t.Fatal("errors.Is() did not match the wrapped cause")
 	}
-	if got, want := err.Error(), "tabular: delimited.read csv row 4 field 2: malformed row: bad record"; got != want {
+	if got, want := err.Error(), "tabular: delimited.read csv row 4 field 2: malformed row"; got != want {
 		t.Fatalf("Error() = %q, want %q", got, want)
 	}
 }

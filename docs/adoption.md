@@ -1,5 +1,19 @@
 # Adoption guide
 
+## V2 migration
+
+This source tree uses `github.com/faustbrian/go-tabular/v2`. Public tags and
+releases establish availability after release gates pass. The owned consumer
+boundaries requiring deliberate adoption are:
+
+- `go-filesystem/integration/tabular-ingestion`;
+- `go-library-tools/release/compatibility-consumer`.
+
+After v2 publication, their owners must update imports deliberately and verify
+the affected composition or release-compatibility boundary. Existing v1
+consumers retain published v1 behavior and must configure explicit positive
+limits for untrusted input; finite zero-value defaults are the v2 source contract.
+
 1. Identify the source format and encoding from its contract. Do not infer
    either from filenames alone.
 2. Set file, archive, and record limits from the narrowest upstream policy.
@@ -8,8 +22,9 @@
 4. Decide row-width policy before processing data.
 5. Keep normalization minimal and record every data-changing option.
 6. Match `ErrorKind` values for operational decisions. Read coordinates from
-   `Error`, but sanitize the wrapped cause before logging because it can contain
-   source-controlled parser details or caller-provided entry names.
+   `Error`. Default `Error.Error()` messages omit cause text and unknown metadata;
+   explicit cause inspection through `Err`, `Unwrap`, or `errors.As` is trusted
+   handling and can expose parser details or caller-provided entry names.
 7. Drain or close readers on every path. Keep delimited, fixed-width, ZIP, and
    XLSX sources available while their readers consume them. XLS is fully
    materialized during `OpenSpreadsheet`, so its source may close after that

@@ -1,10 +1,15 @@
 # Quickstart
 
-Install the stable root module:
+Historical v1 installation (retains its original defaults):
 
 ```sh
 go get github.com/faustbrian/go-tabular@v1
 ```
+
+The guide below describes the v2 source contract, including fields absent in
+v1. Public tags/releases establish availability. After v2 is published, install
+`github.com/faustbrian/go-tabular/v2@v2.0.0` and import the `/v2` path. Do not
+combine v1 installation with the v2-only limits shown below.
 
 ## Choose a reader
 
@@ -20,7 +25,7 @@ policy.
 Run the compiler-checked delimited quick start:
 
 ```sh
-go test github.com/faustbrian/go-tabular -run '^ExampleNewDelimitedReader$' -v
+go test github.com/faustbrian/go-tabular/v2 -run '^ExampleNewDelimitedReader$' -v
 ```
 
 Its complete source is
@@ -32,12 +37,17 @@ executable authority for snippets in this guide.
 ## Configure limits
 
 Defaults are protective, not unlimited. Set limits from the surrounding
-system's upload policy when those limits are smaller. XLS uses
-`MaxWorkbookBytes`; XLSX uses the limits in `SpreadsheetConfig.ZIP`.
+system's upload policy when those limits are smaller. XLS and XLSX use
+`MaxWorkbookBytes`; XLSX additionally uses the limits in `SpreadsheetConfig.ZIP`.
 Untrusted spreadsheets should also set `MaxRecordBytes` and `MaxFieldBytes`
-to bound parsed rows and cells before normalization and caller delivery. For
-XLSX, set `MaxSheets`, `ZIP.MaxCompressionRatio`, and `ZIP.RejectSymlinks` from
-the accepted workbook policy.
+to bound parsed rows and cells before normalization and caller delivery. Set
+`MaxSourceBytes` on delimited readers to bound total bytes, including comments
+and blank lines. XLS `MaxMaterializedCells` bounds cumulative dense slots before
+materialization, while `MaxSheets` bounds both workbook formats. For
+XLSX, override `MaxSheets`, `ZIP.MaxArchiveBytes`, and
+`ZIP.MaxCompressionRatio` when the accepted
+workbook policy differs, and set `ZIP.RejectSymlinks` if metadata links are not
+allowed.
 
 When an import distinguishes missing cells from explicitly stored empty
 strings, set `PreserveCellPresence` and call `ReadCells`. The default `Read`
@@ -60,9 +70,9 @@ Delimited and fixed-width readers do not own or close their input. `OpenZIP`
 retains the caller's `io.ReaderAt`, while `ZIPArchive.Open` returns a new
 caller-closed entry reader. `ZIPArchive.Extract` opens and closes its own entry
 reader. XLS input is fully consumed during `OpenSpreadsheet`, so it need not
-remain available after construction. Keep an XLSX source available until the
-spreadsheet reader closes because presence-aware iteration retains archive
-entry readers.
+remain available after construction. XLSX captures a bounded owned revision
+before validation; parsing and presence-aware iteration use that revision, so
+its source also need not remain available after successful construction.
 
 All readers are stateful and require caller serialization. The package starts
 no goroutines and has no shutdown sequence beyond the documented `Close`
