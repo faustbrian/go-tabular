@@ -81,14 +81,14 @@ func TestXLSXNamespaceSheetNameProjectionRefusedPrivately(t *testing.T) {
 			}
 		}
 		var detail *Error
-		if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || detail.Op != "spreadsheet.sheet" {
+		if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || detail.Op != "spreadsheet.presence" {
 			t.Fatalf("presence %v same-byte projection refusal: %v", presence, err)
 		}
-		if err.Error() != "tabular: spreadsheet.sheet xlsx: spreadsheet error" || strings.Contains(err.Error(), name) {
+		if err.Error() != "tabular: spreadsheet.presence xlsx: spreadsheet error" || strings.Contains(err.Error(), name) {
 			t.Fatalf("presence %v private default diagnostic: %v", presence, err)
 		}
 		cause := errors.Unwrap(err)
-		if cause == nil || cause.Error() != "sheet not found" || !errors.Is(detail.Err, cause) {
+		if cause == nil || cause.Error() != "relationship identity is unsupported" || !errors.Is(detail.Err, cause) {
 			t.Fatalf("presence %v trusted refusal cause missing: %v", presence, cause)
 		}
 	}

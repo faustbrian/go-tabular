@@ -132,17 +132,22 @@ func TestXLSXDecompressorSheetRevisionRefusedPrivately(t *testing.T) {
 	registerPresenceTestCodec()
 	data, workbookLength := presenceCodecWorkbook(t, true)
 	const empty = `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheets/></workbook>`
-	if len(empty) > workbookLength {
+	const renamed = `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Otherx" sheetId="1" r:id="rId1"/></sheets></workbook>`
+	if len(empty) > workbookLength || len(renamed) > workbookLength {
 		t.Fatal("replacement workbook exceeds original member length")
 	}
-	replacement := []byte(empty + strings.Repeat(" ", workbookLength-len(empty)))
-	for _, changed := range []bool{false, true} {
-		t.Run(map[bool]string{false: "stable", true: "changed decoded revision"}[changed], func(t *testing.T) {
+	for _, test := range []struct{ name, replacement, op, cause string }{
+		{name: "stable"},
+		{"changed decoded revision", empty, "spreadsheet.open", "workbook contains no sheets"},
+		{"changed selected sheet name", renamed, "spreadsheet.sheet", "sheet not found"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
 			owner := &presenceCodecScenario{}
-			if changed {
+			if test.replacement != "" {
 				// Sheet-count and graph admission decode the original sheet;
-				// the SDK's third named-member open decodes an empty sheet list.
-				owner.replaceAt, owner.replacement = 3, replacement
+				// the SDK's third named-member open decodes another revision.
+				owner.replaceAt = 3
+				owner.replacement = []byte(test.replacement + strings.Repeat(" ", workbookLength-len(test.replacement)))
 			}
 			presenceCodecRegistry.Lock()
 			presenceCodecRegistry.active = owner
@@ -152,7 +157,7 @@ func TestXLSXDecompressorSheetRevisionRefusedPrivately(t *testing.T) {
 				presenceCodecRegistry.active = nil
 				presenceCodecRegistry.Unlock()
 			}()
-			reader, err := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX})
+			reader, err := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, Sheet: "Errors"})
 			if reader != nil {
 				defer func() {
 					if closeErr := reader.Close(); closeErr != nil {
@@ -160,16 +165,16 @@ func TestXLSXDecompressorSheetRevisionRefusedPrivately(t *testing.T) {
 					}
 				}()
 			}
-			if changed {
+			if test.replacement != "" {
 				var detail *Error
-				if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || detail.Op != "spreadsheet.open" {
+				if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || detail.Op != test.op {
 					t.Fatalf("changed decoded workbook refusal = %v, %v", reader, err)
 				}
 				cause := errors.Unwrap(err)
-				if cause == nil || cause.Error() != "workbook contains no sheets" || !errors.Is(detail.Err, cause) {
-					t.Fatalf("no-sheet cause missing: %v", cause)
+				if cause == nil || cause.Error() != test.cause || !errors.Is(detail.Err, cause) {
+					t.Fatalf("decoded revision refusal cause missing: %v", cause)
 				}
-				if err.Error() != "tabular: spreadsheet.open xlsx: spreadsheet error" || strings.Contains(err.Error(), "workbook contains no sheets") {
+				if err.Error() != "tabular: "+test.op+" xlsx: spreadsheet error" || strings.Contains(err.Error(), test.cause) || strings.Contains(err.Error(), "Otherx") {
 					t.Fatalf("unsafe default error: %v", err)
 				}
 			} else {

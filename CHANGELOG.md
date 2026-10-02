@@ -14,6 +14,12 @@ consumers retain their published behavior without local `replace` directives.
 
 ### Security
 
+- Reject XLSX sheet names, application relationship IDs and targets rewritten
+  by the pinned parser's namespace translation, preserving admitted worksheet
+  identity.
+  Preserve strict namespace declarations and relationship-type vocabulary.
+- Require one namespace-qualified worksheet relationship identity, refusing
+  unrelated or ambiguous identity attributes before delegate parsing.
 - Snapshot XLSX sources within workbook and archive byte limits before
   admission, parsing, and presence-aware iteration, preventing mixed source
   revisions. Reject incomplete declared sources and retain private I/O causes.

@@ -90,9 +90,9 @@ func selectedXLSXSheetReference(
 	var workbook struct {
 		XMLName xml.Name `xml:"workbook"`
 		Sheets  []struct {
-			Name           string `xml:"name,attr"`
-			SheetID        string `xml:"sheetId,attr"`
-			RelationshipID string `xml:"id,attr"`
+			Name       string     `xml:"name,attr"`
+			SheetID    string     `xml:"sheetId,attr"`
+			Attributes []xml.Attr `xml:",any,attr"`
 		} `xml:"sheets>sheet"`
 	}
 	if err = decodeXLSXDocument(reader, &workbook); err != nil {
@@ -102,7 +102,27 @@ func selectedXLSXSheetReference(
 	ids, references := make(map[string]bool), make(map[string]bool)
 	var selected xlsxSheetReference
 	for _, sheet := range workbook.Sheets {
-		if sheet.Name == "" || sheet.RelationshipID == "" {
+		// Match the delegate's relationship namespace, including its strict
+		// vocabulary translation, rather than choosing the last local-name id.
+		var relationshipID string
+		relationshipIDs := 0
+		for _, attribute := range sheet.Attributes {
+			if attribute.Name.Local != "id" || attribute.Name.Space == "xmlns" {
+				continue
+			}
+			if attribute.Name.Space != "http://schemas.openxmlformats.org/officeDocument/2006/relationships" && attribute.Name.Space != "http://purl.oclc.org/ooxml/officeDocument/relationships" {
+				return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet relationship namespace is invalid"))
+			}
+			relationshipIDs++
+			if relationshipIDs > 1 {
+				return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet relationship identities are ambiguous"))
+			}
+			relationshipID = attribute.Value
+		}
+		if !stableXLSXRelationshipIdentity(sheet.Name) || !stableXLSXRelationshipIdentity(relationshipID) {
+			return xlsxSheetReference{}, xlsxPresenceError(errors.New("relationship identity is unsupported"))
+		}
+		if sheet.Name == "" || relationshipID == "" {
 			return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declaration is invalid"))
 		}
 		for _, name := range names {
@@ -110,13 +130,13 @@ func selectedXLSXSheetReference(
 				return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declarations are ambiguous"))
 			}
 		}
-		if references[sheet.RelationshipID] || (sheet.SheetID != "" && ids[sheet.SheetID]) {
+		if references[relationshipID] || (sheet.SheetID != "" && ids[sheet.SheetID]) {
 			return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declarations are ambiguous"))
 		}
 		names = append(names, sheet.Name)
-		references[sheet.RelationshipID], ids[sheet.SheetID] = true, true
+		references[relationshipID], ids[sheet.SheetID] = true, true
 		if selected.name == "" && (requested == "" || sheet.Name == requested) {
-			selected = xlsxSheetReference{name: sheet.Name, relationshipID: sheet.RelationshipID}
+			selected = xlsxSheetReference{name: sheet.Name, relationshipID: relationshipID}
 		}
 	}
 	if selected.name != "" {
@@ -152,6 +172,9 @@ func xlsxWorksheetTarget(
 	ids := make(map[string]bool)
 	var target string
 	for _, relationship := range relationships.Entries {
+		if !stableXLSXRelationshipIdentity(relationship.ID) || !stableXLSXRelationshipIdentity(relationship.Target) {
+			return "", xlsxPresenceError(errors.New("relationship identity is unsupported"))
+		}
 		if relationship.ID == "" || ids[relationship.ID] {
 			return "", xlsxPresenceError(errors.New("worksheet relationships are ambiguous"))
 		}
@@ -172,6 +195,26 @@ func xlsxWorksheetTarget(
 	return "", xlsxPresenceError(errors.New(
 		"worksheet relationship was not found",
 	))
+}
+
+// Excelize v2.11.0 translates these strict namespace strings throughout XML,
+// not just namespace declarations. Sheet names, IDs and targets containing them
+// must not select a different part after admission. The relationship prefix
+// also covers its chart, comments, extended-properties, image and officeDocument
+// translations, accounting for all ten entries in the pinned SDK dictionary.
+func stableXLSXRelationshipIdentity(value string) bool {
+	for _, translated := range []string{
+		excelize.StrictNameSpaceDocumentPropertiesVariantTypes,
+		excelize.StrictNameSpaceDrawingMLMain,
+		excelize.StrictNameSpaceExtendedProperties,
+		excelize.StrictNameSpaceSpreadSheet,
+		excelize.StrictSourceRelationship,
+	} {
+		if strings.Contains(value, translated) {
+			return false
+		}
+	}
+	return true
 }
 
 func (source *xlsxPresenceSource) Read() ([]bool, error) {

@@ -82,13 +82,16 @@ func validateXLSXGraph(archive *ZIPArchive, sheet string) error {
 	ids := make(map[string]bool)
 	workbooks := 0
 	for _, rel := range root.Entries {
+		if !stableXLSXRelationshipIdentity(rel.ID) {
+			return xlsxPresenceError(errors.New("relationship identity is unsupported"))
+		}
 		if rel.ID == "" || ids[rel.ID] {
 			return xlsxPresenceError(errors.New("root relationships are ambiguous"))
 		}
 		ids[rel.ID] = true
 		if strings.HasSuffix(rel.Type, "/officeDocument") {
 			workbooks++
-			if strings.TrimPrefix(rel.Target, "/") != "xl/workbook.xml" || rel.Mode != "" || rel.Type != "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" {
+			if strings.TrimPrefix(rel.Target, "/") != "xl/workbook.xml" || rel.Mode != "" || (rel.Type != "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" && rel.Type != "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument") {
 				return xlsxPresenceError(errors.New("workbook location is unsupported"))
 			}
 		}
