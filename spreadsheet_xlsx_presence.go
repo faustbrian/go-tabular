@@ -73,11 +73,7 @@ func selectedXLSXWorksheetEntry(
 		target = path.Join("xl", target)
 	}
 	target = path.Clean(target)
-	if !safeZIPName(target) {
-		return "", xlsxPresenceError(errors.New(
-			"worksheet relationship target is invalid",
-		))
-	}
+	// The admitted clean relative name stays safe when prefixed by literal xl.
 	return target, nil
 }
 

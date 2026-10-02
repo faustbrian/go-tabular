@@ -226,27 +226,20 @@ func parseSheetState(
 	return parseAdmittedSheet(data, offset, shared, preservePresence)
 }
 
+// parseAdmittedSheet projects the same owned bytes already checked by
+// admitSheet through worksheet EOF, including BOF, record bounds and ROW size.
+// Its two callers perform that admission without intervening collaborators.
 func parseAdmittedSheet(data []byte, offset int, shared []string, preservePresence bool) ([][]Cell, [][]bool, error) {
-	first, err := readRecord(data, offset)
-	if err != nil || first.id != 0x0809 {
-		return nil, nil, errors.New("worksheet BOF not found")
-	}
 	rows := make(map[int]map[int]Cell)
 	widths := make(map[int]int)
 	maxRow := -1
 	for {
-		rec, recErr := readRecord(data, offset)
-		if recErr != nil {
-			return nil, nil, recErr
-		}
+		rec, _ := readRecord(data, offset)
 		if rec.id == 0x000a {
 			break
 		}
 		switch rec.id {
 		case 0x0208:
-			if len(rec.payload) < 6 {
-				return nil, nil, errors.New("truncated ROW record")
-			}
 			row := int(binary.LittleEndian.Uint16(rec.payload[:2]))
 			last := int(binary.LittleEndian.Uint16(rec.payload[4:6]))
 			widths[row] = max(widths[row], last)

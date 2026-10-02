@@ -11,6 +11,7 @@ import (
 // prefix followed by another document or malformed XML.
 func decodeXLSXDocument(reader io.Reader, value any) error {
 	decoder := xml.NewDecoder(reader)
+root:
 	for {
 		token, err := decoder.Token()
 		if err != nil {
@@ -21,7 +22,7 @@ func decodeXLSXDocument(reader io.Reader, value any) error {
 			if err = decoder.DecodeElement(value, &item); err != nil {
 				return err
 			}
-			goto trailing
+			break root
 		case xml.CharData:
 			if strings.Trim(string(item), " \t\r\n") != "" {
 				return errors.New("unexpected XML content")
@@ -31,7 +32,6 @@ func decodeXLSXDocument(reader io.Reader, value any) error {
 			return errors.New("unexpected XML content")
 		}
 	}
-trailing:
 	for {
 		token, err := decoder.Token()
 		if errors.Is(err, io.EOF) {
