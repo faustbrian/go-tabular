@@ -70,9 +70,9 @@ Delimited and fixed-width readers do not own or close their input. `OpenZIP`
 retains the caller's `io.ReaderAt`, while `ZIPArchive.Open` returns a new
 caller-closed entry reader. `ZIPArchive.Extract` opens and closes its own entry
 reader. XLS input is fully consumed during `OpenSpreadsheet`, so it need not
-remain available after construction. Keep an XLSX source available until the
-spreadsheet reader closes because presence-aware iteration retains archive
-entry readers.
+remain available after construction. XLSX captures a bounded owned revision
+before validation; parsing and presence-aware iteration use that revision, so
+its source also need not remain available after successful construction.
 
 All readers are stateful and require caller serialization. The package starts
 no goroutines and has no shutdown sequence beyond the documented `Close`

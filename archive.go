@@ -59,15 +59,8 @@ func (reader *zipEntryReader) Read(destination []byte) (int, error) {
 
 // OpenZIP validates and indexes an archive from a random-access source.
 func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, error) {
-	if source == nil || size < 0 || config.MaxEntries < 0 || config.MaxArchiveBytes < 0 {
-		return nil, &Error{Kind: ErrorInvalidConfig, Op: "zip.open", Format: "zip"}
-	}
-	maxArchiveBytes := config.MaxArchiveBytes
-	if maxArchiveBytes == 0 {
-		maxArchiveBytes = defaultMaxZIPSourceBytes
-	}
-	if size > maxArchiveBytes {
-		return nil, &Error{Kind: ErrorLimitExceeded, Op: "zip.open", Format: "zip", Err: errors.New("archive source is too large")}
+	if err := admitZIPSource(source, size, config); err != nil {
+		return nil, err
 	}
 	maxEntries := config.MaxEntries
 	if maxEntries == 0 {
@@ -131,6 +124,22 @@ func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, err
 		})
 	}
 	return archive, nil
+}
+
+// admitZIPSource applies source policy before indexing or making an owned
+// snapshot. OpenZIP itself deliberately retains its borrowed source.
+func admitZIPSource(source io.ReaderAt, size int64, config ZIPConfig) error {
+	if source == nil || size < 0 || config.MaxEntries < 0 || config.MaxArchiveBytes < 0 {
+		return &Error{Kind: ErrorInvalidConfig, Op: "zip.open", Format: "zip"}
+	}
+	maxArchiveBytes := config.MaxArchiveBytes
+	if maxArchiveBytes == 0 {
+		maxArchiveBytes = defaultMaxZIPSourceBytes
+	}
+	if size > maxArchiveBytes {
+		return &Error{Kind: ErrorLimitExceeded, Op: "zip.open", Format: "zip", Err: errors.New("archive source is too large")}
+	}
+	return nil
 }
 
 func exceedsCompressionRatio(

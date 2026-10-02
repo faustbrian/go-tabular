@@ -1,6 +1,7 @@
 package tabular
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"io"
@@ -32,6 +33,19 @@ type xlsxRows interface {
 }
 
 func openXLSXRows(source io.ReaderAt, size int64, config SpreadsheetConfig) (spreadsheetRowSource, error) {
+	if err := admitZIPSource(source, size, config.ZIP); err != nil {
+		return nil, err
+	}
+	// All admission, delegate parsing and presence reads must observe this same
+	// finite revision, even if the caller later changes its borrowed source.
+	data, err := io.ReadAll(io.NewSectionReader(source, 0, size))
+	if err == nil && int64(len(data)) != size {
+		err = io.ErrUnexpectedEOF
+	}
+	if err != nil {
+		return nil, &Error{Kind: ErrorArchive, Op: "zip.open", Format: "zip", Err: err}
+	}
+	source = bytes.NewReader(data)
 	archive, err := OpenZIP(source, size, config.ZIP)
 	if err != nil {
 		return nil, err

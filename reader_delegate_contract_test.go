@@ -63,9 +63,8 @@ func TestXLSXRowsRefusesUnsupportedSheetNamePrivately(t *testing.T) {
 	}
 }
 
-// ZIP member opening rereads its local header. Admission reads the worksheet
-// for syntax and graph admission; Excelize reads a snapshot, while presence
-// reopens the borrowed archive after both successful worksheet admissions.
+// Refuse the old borrowed-archive reopening boundary after its two worksheet
+// admissions. Snapshot-based construction must never reach that caller read.
 type worksheetReopenFailure struct {
 	*bytes.Reader
 	headerOffset int64
@@ -83,7 +82,7 @@ func (r *worksheetReopenFailure) ReadAt(p []byte, offset int64) (int, error) {
 	return r.Reader.ReadAt(p, offset)
 }
 
-func TestXLSXPresenceReopenPreservesBorrowedIOFailure(t *testing.T) {
+func TestXLSXSnapshotDoesNotReopenBorrowedWorksheet(t *testing.T) {
 	data := makeErrorXLSX(t)
 	index, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -110,25 +109,13 @@ func TestXLSXPresenceReopenPreservesBorrowedIOFailure(t *testing.T) {
 	for _, presence := range []bool{false, true} {
 		source := &worksheetReopenFailure{Reader: bytes.NewReader(data), headerOffset: headerOffset, failure: failure}
 		reader, openErr := OpenSpreadsheet(source, int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, PreserveCellPresence: presence})
-		if !presence {
-			if openErr != nil || reader == nil || source.headerReads != 2 {
-				t.Fatalf("snapshot control: %v, header reads %d", openErr, source.headerReads)
-			}
-			if closeErr := reader.Close(); closeErr != nil {
-				t.Fatal(closeErr)
-			}
-			continue
+		if openErr != nil || reader == nil {
+			t.Fatalf("presence %v owned snapshot: %v", presence, openErr)
 		}
-		if reader != nil {
-			if closeErr := reader.Close(); closeErr != nil {
-				t.Fatal(closeErr)
-			}
-		}
-		if reader != nil || !errors.Is(openErr, ErrorArchive) || !errors.Is(openErr, failure) || source.headerReads != 3 {
-			t.Fatalf("presence reopening: %v, header reads %d", openErr, source.headerReads)
-		}
-		if strings.Contains(openErr.Error(), failure.Error()) {
-			t.Fatalf("default diagnostic exposed source cause: %v", openErr)
+		row, readErr := reader.Read()
+		closeErr := reader.Close()
+		if readErr != nil || closeErr != nil || len(row) != 1 || row[0] != "Value" || source.headerReads != 0 {
+			t.Fatalf("presence %v snapshot read: %v, %v, %v; borrowed header reads %d", presence, row, readErr, closeErr, source.headerReads)
 		}
 	}
 }

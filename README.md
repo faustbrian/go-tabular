@@ -77,9 +77,10 @@ See [formats](docs/formats.md) and
 
 The package never closes caller-provided sources. Delimited and fixed-width
 readers retain their `io.Reader`, and `ZIPArchive` retains its `io.ReaderAt`.
-XLS input is fully consumed by `OpenSpreadsheet`; XLSX callers should keep the
-source available until the spreadsheet reader closes because presence-aware
-iteration retains archive entry readers. Callers must close spreadsheet
+XLS input is fully consumed by `OpenSpreadsheet`; XLSX captures a bounded owned
+revision during construction, shared by admission, parsing, and presence-aware
+iteration. Sources may be released after successful construction. Callers must
+close spreadsheet
 readers and readers returned by `ZIPArchive.Open`. The package starts no
 goroutines, performs no retries, and has no hidden shutdown phase. Reader
 instances are stateful and are not safe for concurrent method calls; callers

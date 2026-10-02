@@ -85,9 +85,11 @@ inspection; do not expose inspected causes in public logs, traces, or responses.
 - `OpenZIP` borrows its `io.ReaderAt`. Callers close every successful
   `ZIPArchive.Open` result; `Extract` closes its own temporary entry reader.
 - `OpenSpreadsheet` never closes its `io.ReaderAt`. XLS is fully consumed by
-  the open call. Keep XLSX sources available until `SpreadsheetReader.Close`
-  because presence-aware iteration retains archive entry readers. Closing the
-  spreadsheet reader releases only package-owned iterator resources.
+  the open call. XLSX captures one size-bounded source revision before ZIP/XML
+  validation; delegate parsing and presence-aware iteration use those owned
+  bytes. The declared source size must be readable in full. After a successful
+  open, callers may release the original source. Closing the spreadsheet reader
+  releases only package-owned iterator resources.
 - Reader methods mutate cursor/header state and are not safe for concurrent
   calls. The package starts no goroutines and exposes no channels or callbacks.
 - Parsing is synchronous and intentionally context-free. Cancellation and

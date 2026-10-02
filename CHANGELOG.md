@@ -14,6 +14,9 @@ consumers retain their published behavior without local `replace` directives.
 
 ### Security
 
+- Snapshot XLSX sources within workbook and archive byte limits before
+  admission, parsing, and presence-aware iteration, preventing mixed source
+  revisions. Reject incomplete declared sources and retain private I/O causes.
 - TABULAR-DEC-002 sha256:193d424eb2d2d034843cebb1243585b0dd8acfa9b5c37ef8e978653a09d6d917
 - TABULAR-DEC-005 sha256:a93f6c978d4caae3bd80d5c4b8e6f23b5d256840e98e7f17be5e6074c7f01776
 - TABULAR-DEC-008 sha256:fc27a152f2251c2b4546c1ba0dbc2ea1d16f3e9668cc5f64d97cd337eb52a619
