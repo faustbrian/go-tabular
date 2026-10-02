@@ -10,6 +10,66 @@ import (
 	"testing"
 )
 
+func TestXLSXCompleteGraphDocumentContracts(t *testing.T) {
+	for _, test := range []struct {
+		name, part, old, replacement string
+		valid                        bool
+	}{
+		{"directive", "xl/worksheets/sheet1.xml", "", "<!DOCTYPE worksheet>", false},
+		{"trailing text", "xl/worksheets/sheet1.xml", "", "unexpected", false},
+		{"trailing comment", "xl/worksheets/sheet1.xml", "", "<!-- complete worksheet -->", true},
+		{"missing office document", "_rels/.rels", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/metadata", false},
+		{"malformed content types", "[Content_Types].xml", "", "<Types><Override", false},
+		{"missing workbook type", "[Content_Types].xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", "application/xml", false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			data := transformZIP(t, makeErrorXLSX(t), func(name string, contents []byte) ([]byte, bool) {
+				if name == test.part {
+					switch test.name {
+					case "directive":
+						contents = append([]byte(test.replacement), contents...)
+					case "trailing text", "trailing comment":
+						contents = append(contents, []byte(test.replacement)...)
+					case "malformed content types":
+						contents = []byte(test.replacement)
+					default:
+						contents = []byte(strings.Replace(string(contents), test.old, test.replacement, 1))
+					}
+				}
+				return contents, true
+			})
+			for _, presence := range []bool{false, true} {
+				reader, err := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, PreserveCellPresence: presence, PreserveCellErrors: true, MaxWorkbookBytes: 4096, MaxSheets: 2, ZIP: ZIPConfig{MaxArchiveBytes: 4096, MaxEntryBytes: 4096, MaxTotalBytes: 8192}})
+				if !test.valid {
+					if reader != nil {
+						_ = reader.Close()
+					}
+					var detail *Error
+					if reader != nil || !errors.Is(err, ErrorSpreadsheet) || !errors.As(err, &detail) || errors.Unwrap(err) == nil || err.Error() != "tabular: "+detail.Op+" xlsx: spreadsheet error" || len(err.Error()) > 96 {
+						t.Fatalf("complete graph refusal: %v", err)
+					}
+					continue
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, want := range []Row{{"Value"}, {"#DIV/0!"}} {
+					got, err := reader.Read()
+					if err != nil || !reflect.DeepEqual(got, want) {
+						t.Fatalf("trailing comment parity: %v %v", got, err)
+					}
+				}
+				if _, err = reader.Read(); !errors.Is(err, io.EOF) {
+					t.Fatalf("trailing comment EOF: %v", err)
+				}
+				if err = reader.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
 func TestXLSXGraphAmbiguityRefusal(t *testing.T) {
 	for _, test := range []struct{ name, part, old, replacement string }{
 		{"different root workbook", "_rels/.rels", `Target="xl/workbook.xml"`, `Target="xl/other.xml"`},
