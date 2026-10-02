@@ -64,8 +64,12 @@ func selectedXLSXWorksheetEntry(
 	if err != nil {
 		return "", err
 	}
+	absolute := strings.HasPrefix(target, "/")
 	target = strings.TrimPrefix(target, "/")
-	if !strings.HasPrefix(target, "xl/") {
+	if !safeZIPName(target) {
+		return "", xlsxPresenceError(errors.New("worksheet relationship target is invalid"))
+	}
+	if !absolute {
 		target = path.Join("xl", target)
 	}
 	target = path.Clean(target)
@@ -88,21 +92,39 @@ func selectedXLSXSheetReference(
 	defer func() { _ = reader.Close() }()
 
 	var workbook struct {
-		Sheets []struct {
+		XMLName xml.Name `xml:"workbook"`
+		Sheets  []struct {
 			Name           string `xml:"name,attr"`
+			SheetID        string `xml:"sheetId,attr"`
 			RelationshipID string `xml:"id,attr"`
 		} `xml:"sheets>sheet"`
 	}
-	if err = xml.NewDecoder(reader).Decode(&workbook); err != nil {
+	if err = decodeXLSXDocument(reader, &workbook); err != nil {
 		return xlsxSheetReference{}, xlsxPresenceError(err)
 	}
+	names := make([]string, 0, len(workbook.Sheets))
+	ids, references := make(map[string]bool), make(map[string]bool)
+	var selected xlsxSheetReference
 	for _, sheet := range workbook.Sheets {
 		if sheet.Name == "" || sheet.RelationshipID == "" {
 			return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declaration is invalid"))
 		}
-		if requested == "" || sheet.Name == requested {
-			return xlsxSheetReference{name: sheet.Name, relationshipID: sheet.RelationshipID}, nil
+		for _, name := range names {
+			if strings.EqualFold(name, sheet.Name) {
+				return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declarations are ambiguous"))
+			}
 		}
+		if references[sheet.RelationshipID] || (sheet.SheetID != "" && ids[sheet.SheetID]) {
+			return xlsxSheetReference{}, xlsxPresenceError(errors.New("worksheet declarations are ambiguous"))
+		}
+		names = append(names, sheet.Name)
+		references[sheet.RelationshipID], ids[sheet.SheetID] = true, true
+		if selected.name == "" && (requested == "" || sheet.Name == requested) {
+			selected = xlsxSheetReference{name: sheet.Name, relationshipID: sheet.RelationshipID}
+		}
+	}
+	if selected.name != "" {
+		return selected, nil
 	}
 	return xlsxSheetReference{}, xlsxPresenceError(errors.New(
 		"worksheet declaration was not found",
@@ -120,6 +142,7 @@ func xlsxWorksheetTarget(
 	defer func() { _ = reader.Close() }()
 
 	var relationships struct {
+		XMLName xml.Name `xml:"Relationships"`
 		Entries []struct {
 			ID         string `xml:"Id,attr"`
 			Target     string `xml:"Target,attr"`
@@ -127,10 +150,16 @@ func xlsxWorksheetTarget(
 			TargetMode string `xml:"TargetMode,attr"`
 		} `xml:"Relationship"`
 	}
-	if err = xml.NewDecoder(reader).Decode(&relationships); err != nil {
+	if err = decodeXLSXDocument(reader, &relationships); err != nil {
 		return "", xlsxPresenceError(err)
 	}
+	ids := make(map[string]bool)
+	var target string
 	for _, relationship := range relationships.Entries {
+		if relationship.ID == "" || ids[relationship.ID] {
+			return "", xlsxPresenceError(errors.New("worksheet relationships are ambiguous"))
+		}
+		ids[relationship.ID] = true
 		if relationship.ID != relationshipID {
 			continue
 		}
@@ -139,7 +168,10 @@ func xlsxWorksheetTarget(
 			!strings.HasSuffix(strings.ToLower(relationship.Type), "/worksheet") {
 			return "", xlsxPresenceError(errors.New("worksheet relationship is invalid"))
 		}
-		return relationship.Target, nil
+		target = relationship.Target
+	}
+	if target != "" {
+		return target, nil
 	}
 	return "", xlsxPresenceError(errors.New(
 		"worksheet relationship was not found",

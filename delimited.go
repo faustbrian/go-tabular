@@ -13,6 +13,9 @@ import (
 const delimitedReadBufferSize = 64 * 1024
 
 var errDelimitedRecordLimit = errors.New("delimited record exceeds byte limit")
+var errDelimitedSourceLimit = errors.New("delimited source exceeds byte limit")
+
+const defaultMaxDelimitedSourceBytes int64 = 64 * 1024 * 1024
 
 // DelimitedConfig explicitly controls delimited-text parsing behavior.
 type DelimitedConfig struct {
@@ -23,13 +26,16 @@ type DelimitedConfig struct {
 	AllowVariableFields bool
 	FieldsPerRecord     int
 	// MaxRecordBytes bounds one logical record before parser allocation.
-	// Zero preserves the unbounded legacy behavior.
+	// Zero selects a finite 1 MiB default.
 	MaxRecordBytes int
 	// MaxFieldBytes bounds one parsed field before normalization.
-	// Zero preserves the unbounded legacy behavior.
+	// Zero selects a finite 1 MiB default.
 	MaxFieldBytes int
-	Header        *HeaderConfig
-	Normalize     NormalizationConfig
+	// MaxSourceBytes bounds all bytes consumed, including headers, blank lines and
+	// comments, before CSV parsing. Zero selects 64 MiB; positive values override it.
+	MaxSourceBytes int64
+	Header         *HeaderConfig
+	Normalize      NormalizationConfig
 }
 
 // DelimitedReader streams records from CSV or another delimited text format.
@@ -64,21 +70,33 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 	if source == nil || !validDelimiter(config.Delimiter) ||
 		(config.Comment != 0 && (!validDelimiter(config.Comment) || config.Comment == config.Delimiter)) ||
 		config.FieldsPerRecord < 0 || config.MaxRecordBytes < 0 ||
-		config.MaxFieldBytes < 0 {
+		config.MaxFieldBytes < 0 || config.MaxSourceBytes < 0 {
 		return nil, &Error{Kind: ErrorInvalidConfig, Op: "delimited.new", Format: format}
 	}
 
-	parserSource := source
-	if config.MaxRecordBytes > 0 {
-		// The CSV parser owns comment skipping. A comment marker is ordinary
-		// unquoted content here, so later quotes cannot open a multiline record.
-		parserSource = &delimitedRecordLimitReader{
-			source:       source,
-			maximum:      config.MaxRecordBytes,
-			trimLeading:  config.TrimLeadingSpace,
-			delimiter:    []byte(string(config.Delimiter)),
-			atFieldStart: true,
-		}
+	maxRecordBytes := config.MaxRecordBytes
+	if maxRecordBytes == 0 {
+		maxRecordBytes = defaultMaxRecordBytes
+	}
+	maxFieldBytes := config.MaxFieldBytes
+	if maxFieldBytes == 0 {
+		maxFieldBytes = defaultMaxRecordBytes
+	}
+	maxSourceBytes := config.MaxSourceBytes
+	if maxSourceBytes == 0 {
+		maxSourceBytes = defaultMaxDelimitedSourceBytes
+	}
+	parserSource := &delimitedRecordLimitReader{
+		source:       &delimitedSourceLimitReader{source: source, remaining: maxSourceBytes},
+		maximum:      maxRecordBytes,
+		trimLeading:  config.TrimLeadingSpace,
+		delimiter:    []byte(string(config.Delimiter)),
+		atFieldStart: true,
+		comment:      []byte(string(config.Comment)),
+		lineStart:    true,
+	}
+	if config.Comment == 0 {
+		parserSource.comment = nil
 	}
 	parser := csv.NewReader(bufio.NewReaderSize(parserSource, delimitedReadBufferSize))
 	parser.Comma = config.Delimiter
@@ -95,7 +113,7 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 		format:        format,
 		headerConfig:  cloneHeaderConfig(config.Header),
 		normalize:     config.Normalize,
-		maxFieldBytes: config.MaxFieldBytes,
+		maxFieldBytes: maxFieldBytes,
 	}, nil
 }
 
@@ -158,10 +176,8 @@ func (reader *DelimitedReader) readRecord() (Row, error) {
 	record, err := reader.reader.Read()
 	if err == nil {
 		reader.row++
-		if reader.maxFieldBytes > 0 {
-			if limitErr := reader.fieldLimitError(record, reader.row); limitErr != nil {
-				return nil, limitErr
-			}
+		if limitErr := reader.fieldLimitError(record, reader.row); limitErr != nil {
+			return nil, limitErr
 		}
 		return Row(record), nil
 	}
@@ -174,13 +190,11 @@ func (reader *DelimitedReader) readRecord() (Row, error) {
 	if errors.As(err, &parseErr) {
 		row = parseErr.Line
 	}
-	if reader.maxFieldBytes > 0 {
-		if limitErr := reader.fieldLimitError(record, row); limitErr != nil {
-			return nil, limitErr
-		}
+	if limitErr := reader.fieldLimitError(record, row); limitErr != nil {
+		return nil, limitErr
 	}
 	kind := ErrorMalformedRow
-	if errors.Is(err, errDelimitedRecordLimit) {
+	if errors.Is(err, errDelimitedRecordLimit) || errors.Is(err, errDelimitedSourceLimit) {
 		kind = ErrorLimitExceeded
 	}
 	return nil, &Error{
@@ -222,6 +236,37 @@ type delimitedRecordLimitReader struct {
 	atFieldStart     bool
 	leadingBytes     [utf8.UTFMax]byte
 	leadingBytesAt   int
+	comment          []byte
+	commentAt        int
+	lineStart        bool
+	inComment        bool
+}
+
+type delimitedSourceLimitReader struct {
+	source    io.Reader
+	remaining int64
+	err       error
+}
+
+func (reader *delimitedSourceLimitReader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if reader.err != nil {
+		return 0, reader.err
+	}
+	if reader.remaining < int64(len(p)) {
+		p = p[:int(reader.remaining)+1]
+	}
+	n, err := reader.source.Read(p)
+	if int64(n) > reader.remaining {
+		n = int(reader.remaining)
+		reader.remaining = 0
+		reader.err = errDelimitedSourceLimit
+		return n, reader.err
+	}
+	reader.remaining -= int64(n)
+	return n, err
 }
 
 func (reader *delimitedRecordLimitReader) Read(destination []byte) (int, error) {
@@ -295,7 +340,7 @@ func (reader *delimitedRecordLimitReader) observeQuotedRun(values []byte) (int, 
 }
 
 func (reader *delimitedRecordLimitReader) canObserveSimple() bool {
-	return !reader.inQuotes && !reader.trimLeading && len(reader.delimiter) == 1
+	return !reader.inQuotes && !reader.trimLeading && len(reader.delimiter) == 1 && len(reader.comment) == 0
 }
 
 func (reader *delimitedRecordLimitReader) observeSimple(values []byte) (int, bool) {
@@ -363,6 +408,32 @@ func (reader *delimitedRecordLimitReader) observe(value byte) {
 		reader.observeQuoted(value)
 		return
 	}
+	if reader.inComment {
+		if value == '\n' {
+			reader.resetRecord()
+		}
+		return
+	}
+	if reader.lineStart && len(reader.comment) > 0 {
+		if value == reader.comment[reader.commentAt] {
+			reader.commentAt++
+			if reader.commentAt == len(reader.comment) {
+				reader.inComment = true
+				reader.lineStart = false
+			}
+			return
+		}
+		reader.lineStart = false
+		for _, prefix := range reader.comment[:reader.commentAt] {
+			reader.observeRecordByte(prefix)
+		}
+		reader.commentAt = 0
+	}
+	reader.lineStart = false
+	reader.observeRecordByte(value)
+}
+
+func (reader *delimitedRecordLimitReader) observeRecordByte(value byte) {
 	if value == '\n' {
 		reader.resetRecord()
 		return
@@ -515,6 +586,9 @@ func (reader *delimitedRecordLimitReader) resetRecord() {
 	reader.delimiterAt = 0
 	reader.atFieldStart = true
 	reader.leadingBytesAt = 0
+	reader.lineStart = true
+	reader.commentAt = 0
+	reader.inComment = false
 }
 
 func validDelimiter(delimiter rune) bool {

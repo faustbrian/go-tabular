@@ -101,6 +101,8 @@ func TestOpenZIPValidatesConfigurationAndArchiveLimits(t *testing.T) {
 		{name: "nil source", size: 0, config: ZIPConfig{}, kind: ErrorInvalidConfig},
 		{name: "negative size", data: []byte("x"), size: -1, config: ZIPConfig{}, kind: ErrorInvalidConfig},
 		{name: "negative max entries", data: []byte("x"), size: 1, config: ZIPConfig{MaxEntries: -1}, kind: ErrorInvalidConfig},
+		{name: "negative max archive bytes", data: []byte("x"), size: 1, config: ZIPConfig{MaxArchiveBytes: -1}, kind: ErrorInvalidConfig},
+		{name: "archive source size", data: []byte("xx"), config: ZIPConfig{MaxArchiveBytes: 1}, kind: ErrorLimitExceeded},
 		{name: "entry count", data: makeZIP(t, map[string]string{"a": "1", "b": "2"}), config: ZIPConfig{MaxEntries: 1}, kind: ErrorLimitExceeded},
 		{name: "entry size", data: makeZIP(t, map[string]string{"a": "1234"}), config: ZIPConfig{MaxEntryBytes: 3}, kind: ErrorLimitExceeded},
 		{name: "total size", data: makeZIP(t, map[string]string{"a": "12", "b": "34"}), config: ZIPConfig{MaxTotalBytes: 3}, kind: ErrorLimitExceeded},
@@ -158,9 +160,47 @@ func TestOpenZIPPreservesOptInArchivePolicies(t *testing.T) {
 	if _, err := OpenZIP(
 		bytes.NewReader(compressed),
 		int64(len(compressed)),
+		ZIPConfig{},
+	); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("default compression ratio error = %v, want limit exceeded", err)
+	}
+	if _, err := OpenZIP(
+		bytes.NewReader(compressed),
+		int64(len(compressed)),
 		ZIPConfig{MaxCompressionRatio: 10_000},
 	); err != nil {
 		t.Fatalf("permitted compression ratio error = %v", err)
+	}
+}
+
+func TestOpenZIPAppliesSafeDefaultExpandedSizeLimit(t *testing.T) {
+	t.Parallel()
+
+	data := makeZIP(t, map[string]string{"data.csv": "x"})
+	setZIPDeclaredSize(t, data, "data.csv", 64*1024*1024+1)
+	if _, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{MaxCompressionRatio: 1e12}); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("OpenZIP() error = %v, want limit exceeded", err)
+	} else if cause := errors.Unwrap(err); cause == nil || cause.Error() != "archive entry is too large" {
+		t.Fatalf("default entry-size refusal was not the first limit: %v", err)
+	}
+}
+
+func TestOpenZIPAppliesSafeDefaultSourceSizeLimit(t *testing.T) {
+	t.Parallel()
+
+	if _, err := OpenZIP(
+		bytes.NewReader(nil),
+		256*1024*1024+1,
+		ZIPConfig{},
+	); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("OpenZIP() error = %v, want limit exceeded", err)
+	}
+
+	data := makeZIP(t, map[string]string{"data.csv": "x"})
+	if _, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{
+		MaxArchiveBytes: int64(len(data)),
+	}); err != nil {
+		t.Fatalf("OpenZIP() exact source boundary error = %v", err)
 	}
 }
 

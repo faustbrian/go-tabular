@@ -42,6 +42,9 @@ func openXLSXRows(source io.ReaderAt, size int64, config SpreadsheetConfig) (spr
 	if err = validateXLSXWorksheets(archive); err != nil {
 		return nil, err
 	}
+	if err = validateXLSXGraph(archive, config.Sheet); err != nil {
+		return nil, err
+	}
 	maxTotal := zipLimitOrDefault(config.ZIP.MaxTotalBytes, defaultMaxZIPTotalBytes)
 	maxEntry := zipLimitOrDefault(config.ZIP.MaxEntryBytes, defaultMaxZIPEntryBytes)
 	if maxTotal > math.MaxInt64 || maxEntry > math.MaxInt64 {
@@ -102,11 +105,16 @@ func zipLimitOrDefault(value, fallback uint64) uint64 {
 
 func validateXLSXSheetLimit(archive *ZIPArchive, maximum int) error {
 	if maximum == 0 {
-		return nil
+		maximum = defaultMaxSheets
 	}
 	reader, err := archive.Open("xl/workbook.xml")
 	if err != nil {
-		return err
+		return &Error{
+			Kind:   ErrorSpreadsheet,
+			Op:     "spreadsheet.validate",
+			Format: string(FormatXLSX),
+			Err:    err,
+		}
 	}
 	defer func() { _ = reader.Close() }()
 
@@ -136,7 +144,7 @@ func validateXLSXWorksheets(archive *ZIPArchive) error {
 		if err != nil {
 			return err
 		}
-		err = xml.NewDecoder(reader).Decode(&struct{}{})
+		err = decodeXLSXDocument(reader, &struct{}{})
 		_ = reader.Close()
 		if err != nil {
 			return &Error{Kind: ErrorSpreadsheet, Op: "spreadsheet.validate", Format: string(FormatXLSX), Err: err}

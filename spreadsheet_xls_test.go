@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	internalxls "github.com/faustbrian/go-tabular/internal/xls"
+	internalxls "github.com/faustbrian/go-tabular/v2/internal/xls"
 )
 
 func TestXLSReaderIngestsRealWorkbookFixture(t *testing.T) {

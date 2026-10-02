@@ -38,7 +38,8 @@ func (kind ErrorKind) Error() string {
 }
 
 // Error carries stable classification and optional ingest coordinates.
-// Row and Field are one-based when set.
+// Row and Field are one-based when set. Default diagnostics omit cause text and
+// unknown metadata. Err and Unwrap retain the original cause for trusted inspection.
 type Error struct {
 	Kind   ErrorKind
 	Op     string
@@ -51,11 +52,11 @@ type Error struct {
 func (err *Error) Error() string {
 	var context strings.Builder
 	context.WriteString("tabular")
-	if err.Op != "" {
+	if knownDiagnosticContext(err.Op) {
 		context.WriteString(": ")
 		context.WriteString(err.Op)
 	}
-	if err.Format != "" {
+	if knownDiagnosticContext(err.Format) {
 		context.WriteByte(' ')
 		context.WriteString(err.Format)
 	}
@@ -65,15 +66,34 @@ func (err *Error) Error() string {
 	if err.Field > 0 {
 		fmt.Fprintf(&context, " field %d", err.Field)
 	}
-	if err.Kind != "" {
-		context.WriteString(": ")
+	context.WriteString(": ")
+	switch err.Kind {
+	case ErrorInvalidConfig, ErrorInvalidHeader, ErrorDuplicateHeader,
+		ErrorMalformedRow, ErrorInvalidEncoding, ErrorInvalidLayout,
+		ErrorArchive, ErrorEntryNotFound, ErrorLimitExceeded, ErrorSpreadsheet:
 		context.WriteString(string(err.Kind))
-	}
-	if err.Err != nil {
-		context.WriteString(": ")
-		context.WriteString(err.Err.Error())
+	default:
+		context.WriteString("error")
 	}
 	return context.String()
+}
+
+// Only package-owned literal context is safe in the default diagnostic. Public
+// metadata and unsupported format/encoding values may contain caller data.
+func knownDiagnosticContext(value string) bool {
+	switch value {
+	case "delimited.new", "delimited.header", "delimited.read",
+		"fixedwidth.new", "fixedwidth.read", "fixedwidth.extract",
+		"zip.open", "zip.entry.open", "zip.entry.read", "zip.extract",
+		"encoding.decode", "encoding.reader", "encoding.decoder", "header.normalize",
+		"spreadsheet.open", "spreadsheet.sheet", "spreadsheet.rows",
+		"spreadsheet.read", "spreadsheet.header", "spreadsheet.validate", "spreadsheet.presence",
+		"csv", "delimited", "fixed-width", "zip", "xls", "xlsx",
+		"utf-8", "iso-8859-1", "windows-1252":
+		return true
+	default:
+		return false
+	}
 }
 
 func (err *Error) Unwrap() error {

@@ -20,8 +20,8 @@ consumers.
 
 - `DelimitedConfig`: delimiter, comments, quote policy, row shape, header,
   normalization, and explicit logical-record and field byte limits.
-- Zero record and field limits preserve unbounded legacy behavior; untrusted
-  sources require explicit positive limits.
+- Zero record and field limits select finite 1 MiB defaults; explicit positive
+  values override them.
 - `NewCSVReader`: always selects comma, regardless of `Delimiter`.
 - `NewDelimitedReader`: requires a valid explicit delimiter.
 - `DelimitedReader.Header` and `Read`: cached header and streaming rows.
@@ -42,8 +42,8 @@ consumers.
 
 ## Archives
 
-- `ZIPConfig`: maximum entries, per-entry bytes, total expanded bytes,
-  compression ratio, and symbolic-link rejection.
+- `ZIPConfig`: maximum compressed source bytes, entries, per-entry bytes,
+  total expanded bytes, compression ratio, and symbolic-link rejection.
 - `OpenZIP`: validates and indexes a random-access ZIP source.
 - `ZIPArchive.Entries`, `Open`, and `Extract`: copied metadata, exact entry
   streaming, and writer-based extraction.
@@ -52,10 +52,10 @@ consumers.
 
 - `FormatXLS` and `FormatXLSX` must be selected explicitly.
 - `SpreadsheetConfig`: sheet, headers, row shape, errors, workbook, worksheet
-  count and XLSX ZIP limits, plus opt-in parsed-row, cell byte, and cell
-  presence behavior.
-- Zero spreadsheet record and field limits preserve legacy behavior;
-  untrusted sources require explicit positive limits.
+  count, XLS-specific MaxMaterializedCells and XLSX ZIP limits, plus finite-default parsed-row and cell-byte
+  limits and opt-in cell-presence behavior.
+- Zero spreadsheet size and count limits select documented finite defaults;
+  explicit positive values override them.
 - `OpenSpreadsheet`, `Header`, `Read`, and `Close`: common string-row
   lifecycle.
 - `PreserveCellPresence`, `SpreadsheetCell`, `SpreadsheetRow`, and
@@ -72,9 +72,11 @@ Stable kinds are `ErrorInvalidConfig`, `ErrorInvalidHeader`,
 `ErrorInvalidLayout`, `ErrorArchive`, `ErrorEntryNotFound`,
 `ErrorLimitExceeded`, and `ErrorSpreadsheet`.
 
-Wrapped causes can contain source-controlled parser details or caller-provided
-archive names. Match `ErrorKind` for control flow and sanitize complete error
-strings before placing them in logs, traces, or responses.
+Default `Error.Error()` includes only known literal category/context and numeric
+coordinates; unknown metadata and cause text are omitted. Wrapped causes can
+contain source-controlled parser details or caller-provided archive names.
+`Err`, `Unwrap`, and `errors.As` preserve those original values for trusted
+inspection; do not expose inspected causes in public logs, traces, or responses.
 
 ## Lifecycle And Concurrency
 

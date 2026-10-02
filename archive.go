@@ -10,16 +10,22 @@ import (
 )
 
 const (
-	defaultMaxZIPEntries    = 1000
-	defaultMaxZIPEntryBytes = 1024 * 1024 * 1024
-	defaultMaxZIPTotalBytes = 4 * 1024 * 1024 * 1024
+	defaultMaxZIPEntries           = 1000
+	defaultMaxZIPSourceBytes int64 = 256 * 1024 * 1024
+	defaultMaxZIPEntryBytes        = 64 * 1024 * 1024
+	defaultMaxZIPTotalBytes        = 256 * 1024 * 1024
+	defaultMaxZIPRatio             = 100
 )
 
 // ZIPConfig defines archive-bomb safeguards. Zero size values select
-// documented finite defaults. A zero compression ratio and false link policy
-// preserve the prior behavior.
+// documented finite defaults. A zero compression ratio selects a finite
+// default. The false link policy is safe because entries are never followed or
+// written to the filesystem.
 type ZIPConfig struct {
-	MaxEntries          int
+	MaxEntries int
+	// MaxArchiveBytes bounds the compressed source before ZIP parsing.
+	// Zero selects a finite 256 MiB default.
+	MaxArchiveBytes     int64
 	MaxEntryBytes       uint64
 	MaxTotalBytes       uint64
 	MaxCompressionRatio uint64
@@ -53,8 +59,15 @@ func (reader *zipEntryReader) Read(destination []byte) (int, error) {
 
 // OpenZIP validates and indexes an archive from a random-access source.
 func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, error) {
-	if source == nil || size < 0 || config.MaxEntries < 0 {
+	if source == nil || size < 0 || config.MaxEntries < 0 || config.MaxArchiveBytes < 0 {
 		return nil, &Error{Kind: ErrorInvalidConfig, Op: "zip.open", Format: "zip"}
+	}
+	maxArchiveBytes := config.MaxArchiveBytes
+	if maxArchiveBytes == 0 {
+		maxArchiveBytes = defaultMaxZIPSourceBytes
+	}
+	if size > maxArchiveBytes {
+		return nil, &Error{Kind: ErrorLimitExceeded, Op: "zip.open", Format: "zip", Err: errors.New("archive source is too large")}
 	}
 	maxEntries := config.MaxEntries
 	if maxEntries == 0 {
@@ -67,6 +80,10 @@ func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, err
 	maxTotalBytes := config.MaxTotalBytes
 	if maxTotalBytes == 0 {
 		maxTotalBytes = defaultMaxZIPTotalBytes
+	}
+	maxCompressionRatio := config.MaxCompressionRatio
+	if maxCompressionRatio == 0 {
+		maxCompressionRatio = defaultMaxZIPRatio
 	}
 
 	reader, err := zip.NewReader(source, size)
@@ -95,7 +112,7 @@ func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, err
 		if exceedsCompressionRatio(
 			file.UncompressedSize64,
 			file.CompressedSize64,
-			config.MaxCompressionRatio,
+			maxCompressionRatio,
 		) {
 			return nil, &Error{Kind: ErrorLimitExceeded, Op: "zip.open", Format: "zip", Err: errors.New("archive entry compression ratio is too large")}
 		}
