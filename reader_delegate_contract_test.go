@@ -3,10 +3,13 @@ package tabular
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func TestDelimitedSourceEmptyReadDoesNotConsumeInput(t *testing.T) {
@@ -22,6 +25,111 @@ func TestDelimitedSourceEmptyReadDoesNotConsumeInput(t *testing.T) {
 	count, err := reader.Read(buffer)
 	if count != 1 || err != nil || string(buffer) != "a" || source.reads != 1 || reader.remaining != 0 {
 		t.Fatalf("following read = %d, %v, %q; source reads %d, remaining %d", count, err, buffer, source.reads, reader.remaining)
+	}
+}
+
+func TestXLSXRowsRefusesUnsupportedSheetNamePrivately(t *testing.T) {
+	data := rewriteZIPEntry(t, makeErrorXLSX(t), "xl/workbook.xml", `<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="A/B" sheetId="1" r:id="rId1"/></sheets></workbook>`)
+	if len(data) > 65537 {
+		t.Fatal("ordinary workbook fixture exceeds its test budget")
+	}
+	archive, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = validateXLSXWorksheets(archive); err != nil {
+		t.Fatal(err)
+	}
+	if err = validateXLSXGraph(archive, ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, presence := range []bool{false, true} {
+		reader, openErr := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, PreserveCellPresence: presence})
+		if reader != nil {
+			if closeErr := reader.Close(); closeErr != nil {
+				t.Fatal(closeErr)
+			}
+		}
+		if reader != nil || !errors.Is(openErr, ErrorSpreadsheet) {
+			t.Fatalf("presence %v rows refusal: %v", presence, openErr)
+		}
+		if openErr.Error() != "tabular: spreadsheet.rows xlsx: spreadsheet error" || strings.Contains(openErr.Error(), "A/B") {
+			t.Fatalf("presence %v default diagnostic: %v", presence, openErr)
+		}
+		cause := errors.Unwrap(openErr)
+		if !errors.Is(openErr, excelize.ErrSheetNameInvalid) || !errors.Is(cause, excelize.ErrSheetNameInvalid) {
+			t.Fatalf("presence %v rows cause missing: %v", presence, cause)
+		}
+	}
+}
+
+// ZIP member opening rereads its local header. Admission reads the worksheet
+// for syntax and graph admission; Excelize reads a snapshot, while presence
+// reopens the borrowed archive after both successful worksheet admissions.
+type worksheetReopenFailure struct {
+	*bytes.Reader
+	headerOffset int64
+	headerReads  int
+	failure      error
+}
+
+func (r *worksheetReopenFailure) ReadAt(p []byte, offset int64) (int, error) {
+	if offset == r.headerOffset && len(p) == 30 {
+		r.headerReads++
+		if r.headerReads > 2 {
+			return 0, r.failure
+		}
+	}
+	return r.Reader.ReadAt(p, offset)
+}
+
+func TestXLSXPresenceReopenPreservesBorrowedIOFailure(t *testing.T) {
+	data := makeErrorXLSX(t)
+	index, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var headerOffset int64 = -1
+	for _, entry := range index.File {
+		if entry.Name != "xl/worksheets/sheet1.xml" {
+			continue
+		}
+		dataOffset, offsetErr := entry.DataOffset()
+		if offsetErr != nil {
+			t.Fatal(offsetErr)
+		}
+		headerOffset = dataOffset - 30 - int64(len(entry.Name))
+		if headerOffset < 0 || binary.LittleEndian.Uint32(data[headerOffset:]) != 0x04034b50 || binary.LittleEndian.Uint16(data[headerOffset+28:]) != 0 {
+			t.Fatal("fixture must have a normal worksheet header without extra fields")
+		}
+	}
+	if headerOffset < 0 || len(data) > 65537 {
+		t.Fatal("ordinary worksheet fixture missing or too large")
+	}
+	failure := errors.New("application-private-source-read")
+	for _, presence := range []bool{false, true} {
+		source := &worksheetReopenFailure{Reader: bytes.NewReader(data), headerOffset: headerOffset, failure: failure}
+		reader, openErr := OpenSpreadsheet(source, int64(len(data)), SpreadsheetConfig{Format: FormatXLSX, PreserveCellPresence: presence})
+		if !presence {
+			if openErr != nil || reader == nil || source.headerReads != 2 {
+				t.Fatalf("snapshot control: %v, header reads %d", openErr, source.headerReads)
+			}
+			if closeErr := reader.Close(); closeErr != nil {
+				t.Fatal(closeErr)
+			}
+			continue
+		}
+		if reader != nil {
+			if closeErr := reader.Close(); closeErr != nil {
+				t.Fatal(closeErr)
+			}
+		}
+		if reader != nil || !errors.Is(openErr, ErrorArchive) || !errors.Is(openErr, failure) || source.headerReads != 3 {
+			t.Fatalf("presence reopening: %v, header reads %d", openErr, source.headerReads)
+		}
+		if strings.Contains(openErr.Error(), failure.Error()) {
+			t.Fatalf("default diagnostic exposed source cause: %v", openErr)
+		}
 	}
 }
 
