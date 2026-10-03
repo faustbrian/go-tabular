@@ -23,6 +23,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Maintenance
 
+- Update the text-processing dependency to `golang.org/x/text` v0.41.0.
+
 - Upgrade the checksum-pinned `go-library-tools` CLI and reusable CI workflow
   to immutable v1.4.0 W14 enforcement while retaining the schema-v2 cohesion
   contract, local `make cohesion` entry point, package-owned gates, and online

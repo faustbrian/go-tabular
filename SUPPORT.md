@@ -1,13 +1,14 @@
 # Support
 
-Use [GitHub Issues](https://github.com/faustbrian/go-tabular/issues) for
-reproducible defects, documentation gaps, and bounded feature proposals.
-Include the module path and version, Go version, platform, minimal reproduction,
-expected behavior, actual behavior, and relevant non-secret logs.
+Start with the [quick start](docs/quickstart.md), [format guide](docs/formats.md),
+and [FAQ](docs/faq.md) for adoption guidance.
 
-Use [GitHub Discussions](https://github.com/faustbrian/go-tabular/discussions)
-for adoption questions and design exploration. Use the private process in
-[`SECURITY.md`](SECURITY.md) for vulnerabilities.
+For proposed corrections, documentation improvements, or bounded features,
+follow [CONTRIBUTING.md](CONTRIBUTING.md) and submit a pull request. Include the
+module path and version, Go version, platform, minimal reproduction, expected
+behavior, actual behavior, and relevant non-secret logs.
+
+Use the private process in [`SECURITY.md`](SECURITY.md) for vulnerabilities.
 
 Support covers released module versions according to
 [`COMPATIBILITY.md`](COMPATIBILITY.md). Main-branch changes are unreleased until
