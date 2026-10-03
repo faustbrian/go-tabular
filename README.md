@@ -131,9 +131,7 @@ explicit compatibility and data-integrity analysis.
 
 Report vulnerabilities privately according to [SECURITY.md](SECURITY.md).
 Review [docs/security.md](docs/security.md) before ingesting untrusted files.
-Use [GitHub Issues](https://github.com/faustbrian/go-tabular/issues) for defects
-and [GitHub Discussions](https://github.com/faustbrian/go-tabular/discussions)
-for adoption questions as described in [SUPPORT.md](SUPPORT.md).
+See [SUPPORT.md](SUPPORT.md) for adoption guidance and contributions.
 
 ## License
 
