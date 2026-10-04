@@ -7,6 +7,14 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-04
+
+### Compatibility
+
+- Require Go 1.27.0 or later, up from Go 1.26.6. Upgrade local and CI
+  toolchains before adopting this version. The module path and public API
+  remain unchanged.
+
 ### Specification Decisions
 
 - Publish the [specification decision register](docs/specification-decisions.md),
