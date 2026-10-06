@@ -5,7 +5,20 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - root v2.0.0
+## [Unreleased]
+
+## [2.0.1] - 2026-10-06
+
+### Maintenance
+
+- Update the spreadsheet parser's x/text dependency to v0.42.0 for Unicode
+  normalization correctness fixes while retaining the root's Go 1.27 floor.
+- Refresh immutable CI workflow and runner-action pins while preserving
+  checksum-selected tooling and the separate root release qualifier.
+- Align installation and adoption guidance with the already published v2
+  module, without claiming downstream adoption.
+
+## [2.0.0] - 2026-10-06
 
 The root source tree uses the `/v2` module path. Public tags and releases
 establish availability; release gates precede publication, and maintained
@@ -13,9 +26,6 @@ consumer adoption follows verification of the public module. Historical v1
 consumers retain their published behavior without local `replace` directives.
 
 ### Maintenance
-
-- Update the spreadsheet parser's x/text dependency to v0.42.0 for Unicode
-  normalization correctness fixes while retaining the root's Go 1.27 floor.
 
 - Adopt the checksum-pinned public Golib v1.8.5 CLI and an explicit source-built
   root release qualification route. Four independently reviewed XLS boundary
@@ -241,5 +251,7 @@ consumers retain their published behavior without local `replace` directives.
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/faustbrian/go-tabular/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v2.0.0
 [1.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v1.0.0

@@ -1,15 +1,14 @@
 # Quickstart
 
-Historical v1 installation (retains its original defaults):
+Install the published v2 module:
 
 ```sh
-go get github.com/faustbrian/go-tabular@v1
+go get github.com/faustbrian/go-tabular/v2@v2.0.0
 ```
 
-The guide below describes the v2 source contract, including fields absent in
-v1. Public tags/releases establish availability. After v2 is published, install
-`github.com/faustbrian/go-tabular/v2@v2.0.0` and import the `/v2` path. Do not
-combine v1 installation with the v2-only limits shown below.
+The guide describes the public v2 contract, including fields absent in v1.
+Import the `/v2` path; do not combine v1 installation with the v2-only limits
+shown below. Existing v1 consumers should follow the [migration guide](migration.md).
 
 ## Choose a reader
 

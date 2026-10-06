@@ -2,14 +2,14 @@
 
 ## V2 migration
 
-This source tree uses `github.com/faustbrian/go-tabular/v2`. Public tags and
-releases establish availability after release gates pass. The owned consumer
+The public v2.0.0 module is available as `github.com/faustbrian/go-tabular/v2`.
+Publication does not establish downstream adoption. The owned consumer
 boundaries requiring deliberate adoption are:
 
 - `go-filesystem/integration/tabular-ingestion`;
 - `go-library-tools/release/compatibility-consumer`.
 
-After v2 publication, their owners must update imports deliberately and verify
+Their owners must update imports deliberately and verify
 the affected composition or release-compatibility boundary. Existing v1
 consumers retain published v1 behavior and must configure explicit positive
 limits for untrusted input; finite zero-value defaults are the v2 source contract.
