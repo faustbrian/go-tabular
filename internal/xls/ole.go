@@ -152,6 +152,12 @@ func readDIFAT(
 	sectorCount uint32,
 	fatCount uint32,
 ) ([]uint32, error) {
+	if uint64(sectorCount) > uint64(compound.sectorCount()) {
+		return nil, errors.New("xls: invalid DIFAT sector count")
+	}
+	if uint64(fatCount) > uint64(compound.sectorCount()) {
+		return nil, errors.New("xls: invalid FAT sector count")
+	}
 	difat := make([]uint32, 0, fatCount)
 	appendFATSectors := func(data []byte) {
 		for offset := 0; offset < len(data); offset += 4 {

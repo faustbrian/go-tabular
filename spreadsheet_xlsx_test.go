@@ -334,6 +334,25 @@ func TestXLSXReaderReportsMissingSheetsBrokenFilesAndLimits(t *testing.T) {
 	closeTestResource(t, reader)
 }
 
+func TestXLSXReaderAppliesSafeDefaultSheetLimit(t *testing.T) {
+	t.Parallel()
+
+	var workbook strings.Builder
+	workbook.WriteString(`<workbook><sheets>`)
+	for index := 1; index <= defaultMaxSheets+1; index++ {
+		fmt.Fprintf(&workbook, `<sheet name="sheet%d"/>`, index)
+	}
+	workbook.WriteString(`</sheets></workbook>`)
+	data := makeZIP(t, map[string]string{"xl/workbook.xml": workbook.String()})
+	archive, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = validateXLSXSheetLimit(archive, 0); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("validateXLSXSheetLimit() error = %v, want limit exceeded", err)
+	}
+}
+
 func TestXLSXCloseStopsIteration(t *testing.T) {
 	t.Parallel()
 

@@ -35,8 +35,9 @@ definitions and header replacement maps. Returned rows and archive entry lists
 do not expose package-owned mutable state. Delimited and fixed-width readers
 borrow and retain their sources but hold no closeable package resource.
 `ZIPArchive` retains its random-access source. XLS is fully materialized during
-`OpenSpreadsheet`, while XLSX callers should retain the source until close
-because presence-aware iteration keeps archive entry readers. A spreadsheet
+`OpenSpreadsheet`, while XLSX captures a bounded owned revision before admission
+so validation, delegate parsing, and presence readers cannot mix source revisions.
+XLSX iteration retains the owned bytes, not the caller's source. A spreadsheet
 reader owns its internal iterator and must be closed; closing it does not close
 the source. Each reader returned by `ZIPArchive.Open` is caller-owned and must
 be closed. `ZIPArchive.Extract` owns and closes its temporary entry reader.

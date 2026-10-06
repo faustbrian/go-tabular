@@ -5,14 +5,14 @@
   "modules": [
     {
       "directory": ".",
-      "module_path": "github.com/faustbrian/go-tabular",
+      "module_path": "github.com/faustbrian/go-tabular/v2",
       "go_version": "1.27.0",
       "packages": [
         {
           "module_directory": ".",
           "directory": ".",
           "name": "tabular",
-          "import_path": "github.com/faustbrian/go-tabular",
+          "import_path": "github.com/faustbrian/go-tabular/v2",
           "kind": "public",
           "production": true,
           "executable": true,
@@ -24,7 +24,7 @@
           "module_directory": ".",
           "directory": "internal/xls",
           "name": "xls",
-          "import_path": "github.com/faustbrian/go-tabular/internal/xls",
+          "import_path": "github.com/faustbrian/go-tabular/v2/internal/xls",
           "kind": "internal",
           "production": true,
           "executable": true,
@@ -41,10 +41,13 @@
       "family_label": "Integration And Data Movement",
       "family_description": "Bounded external I/O, data movement, provider boundaries, and derived search state.",
       "family_order": 7,
-      "version": "1.1.0",
+      "version": "2.0.0",
       "tag_prefix": "v",
       "owned_dependencies": [],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-filesystem/integration/tabular-ingestion",
+        "github.com/faustbrian/go-library-tools/release/compatibility-consumer"
+      ],
       "external_runtime_dependencies": [
         "github.com/xuri/excelize/v2",
         "golang.org/x/text"
@@ -90,13 +93,13 @@
         ],
         "public_package_identifier": "tabular",
         "primary_entry_packages": [
-          "github.com/faustbrian/go-tabular"
+          "github.com/faustbrian/go-tabular/v2"
         ],
         "package_selection": {
-          "github.com/faustbrian/go-tabular": "Use for explicit, bounded tabular ingestion from caller-provided readers and random-access sources."
+          "github.com/faustbrian/go-tabular/v2": "Use for explicit, bounded tabular ingestion from caller-provided readers and random-access sources after the v2 release."
         },
-        "lifecycle_status": "active",
-        "maturity": "stable",
+        "lifecycle_status": "stable",
+        "maturity": "preview",
         "construction_styles": [
           "new-config",
           "open",
@@ -154,7 +157,7 @@
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
-          "release": "in-progress"
+          "release": "blocked"
         }
       },
       "gates": {

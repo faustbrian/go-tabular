@@ -6,6 +6,11 @@ Security fixes are applied to the latest stable v1 release and `main`.
 Additional supported release lines and end-of-support dates will be documented
 here when offered.
 
+The finite-default hardening in the active source changes documented behavior
+and is therefore planned for unpublished v2. Until v2 is published, v1 callers
+processing untrusted input must set explicit positive limits and enforce
+transport and job-level resource controls.
+
 ## Reporting A Vulnerability
 
 Use [GitHub private vulnerability reporting](https://github.com/faustbrian/go-tabular/security/advisories/new)

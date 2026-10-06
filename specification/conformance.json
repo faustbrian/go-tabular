@@ -16,7 +16,7 @@
     {
       "id": "TABULAR-DEC-002",
       "authoritative_sources": ["rfc4180-source"],
-      "executable_evidence": ["TestDelimitedReaderSupportsSemicolonAndComments", "TestDelimitedReaderEnforcesRecordAndFieldLimits", "TestDelimitedRecordLimitReaderBoundsBeforeParserAllocation", "TestDelimitedReaderValidatesConfiguration"],
+      "executable_evidence": ["TestDelimitedReaderSupportsSemicolonAndComments", "TestDelimitedReaderEnforcesRecordAndFieldLimits", "TestDelimitedReaderAppliesSafeDefaultRecordLimit", "TestDelimitedReaderAppliesSafeDefaultFieldLimit", "TestDelimitedRecordLimitReaderBoundsBeforeParserAllocation", "TestDelimitedReaderValidatesConfiguration", "TestDelimitedAggregateAdmission", "TestCommentRecordAdmissionParity", "TestDelimitedSmallRecordFieldAndQuoteBudgets"],
       "fixtures": ["testdata/delimited/semicolon.csv", "testdata/delimited/large.csv"],
       "fuzz": ["FuzzDelimitedReader"],
       "interoperability_evidence": [],
@@ -52,7 +52,7 @@
     {
       "id": "TABULAR-DEC-005",
       "authoritative_sources": ["ms-xls-source"],
-      "executable_evidence": ["TestParseBIFF8ValidatesGlobalsAndBuildsWorkbook", "TestParseSheetDecodesSupportedCellRecords", "TestParseSheetPreservesBlankCellRecords", "TestXLSReaderPreservesStoredCellPresence", "TestXLSReaderIngestsRealWorkbookFixture"],
+      "executable_evidence": ["TestParseBIFF8ValidatesGlobalsAndBuildsWorkbook", "TestParseSheetDecodesSupportedCellRecords", "TestParseSheetPreservesBlankCellRecords", "TestXLSReaderPreservesStoredCellPresence", "TestXLSReaderIngestsRealWorkbookFixture", "TestBIFFRowDimensionAdmission", "TestBIFFCoordinateAdmission", "TestBIFFCumulativeAdmission", "TestXLSMaterializationAdmissionPublic"],
       "fixtures": ["testdata/spreadsheet/table.xls"],
       "fuzz": ["FuzzOpenXLS"],
       "interoperability_evidence": ["testdata/spreadsheet/table.xls"],
@@ -88,7 +88,7 @@
     {
       "id": "TABULAR-DEC-008",
       "authoritative_sources": ["zip-source"],
-      "executable_evidence": ["TestOpenZIPRejectsUnsafeAndDuplicateNames", "TestZIPArchiveExactResourceBoundaries", "TestSpreadsheetOpenExactResourceBoundaries", "TestXLSXReaderValidatesExtremeLimitsAndWorkbookStructure", "TestSpreadsheetReaderBoundsParsedRecordAndFields"],
+      "executable_evidence": ["TestOpenZIPRejectsUnsafeAndDuplicateNames", "TestOpenZIPAppliesSafeDefaultSourceSizeLimit", "TestOpenZIPAppliesSafeDefaultExpandedSizeLimit", "TestZIPArchiveExactResourceBoundaries", "TestSpreadsheetOpenExactResourceBoundaries", "TestOpenSpreadsheetAppliesWorkbookLimitBeforeXLSXParsing", "TestXLSXReaderAppliesSafeDefaultSheetLimit", "TestXLSXReaderValidatesExtremeLimitsAndWorkbookStructure", "TestSpreadsheetReaderAppliesSafeDefaultFieldLimit", "TestSpreadsheetReaderAppliesSafeDefaultRecordLimit", "TestSpreadsheetReaderBoundsParsedRecordAndFields", "TestXLSXRelationshipAdmissionParity", "TestXLSXUnsafeTargetAdmissionParity", "TestDefaultDiagnosticPreservesTrustedCauseWithoutDisclosure"],
       "fixtures": ["testdata/spreadsheet/malformed.xlsx", "testdata/archive/broken.zip"],
       "fuzz": ["FuzzOpenSpreadsheet", "FuzzOpenZIP"],
       "interoperability_evidence": [],
