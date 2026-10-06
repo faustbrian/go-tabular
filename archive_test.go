@@ -365,7 +365,21 @@ func FuzzOpenZIP(f *testing.F) {
 
 func BenchmarkZIPExtract(b *testing.B) {
 	data := makeZIP(b, map[string]string{"data.csv": strings.Repeat("1,Alice,Helsinki\n", 20_000)})
-	archive, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{})
+	fixture, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		b.Fatal(err)
+	}
+	if len(fixture.File) != 1 || fixture.File[0].CompressedSize64 == 0 {
+		b.Fatal("benchmark requires one nonempty compressed member")
+	}
+	member := fixture.File[0]
+	// This deliberately repetitive fixture needs its own finite allowance;
+	// production ratio defaults and all other admission budgets remain active.
+	ratio := member.UncompressedSize64 / member.CompressedSize64
+	if member.UncompressedSize64%member.CompressedSize64 != 0 {
+		ratio++
+	}
+	archive, err := OpenZIP(bytes.NewReader(data), int64(len(data)), ZIPConfig{MaxCompressionRatio: ratio})
 	if err != nil {
 		b.Fatal(err)
 	}
