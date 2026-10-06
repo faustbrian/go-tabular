@@ -5,7 +5,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-100%25_required-blue)](CONTRIBUTING.md#verification)
 [![Mutation](https://img.shields.io/badge/mutation-100%25_required-blue)](CONTRIBUTING.md#verification)
 [![Documentation](https://img.shields.io/badge/docs-checked_in_CI-blue)](docs/)
-[![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-tabular.svg)](https://pkg.go.dev/github.com/faustbrian/go-tabular)
+[![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-tabular/v2.svg)](https://pkg.go.dev/github.com/faustbrian/go-tabular/v2)
 [![Release](https://img.shields.io/github/v/release/faustbrian/go-tabular?sort=semver)](https://github.com/faustbrian/go-tabular/releases)
 [![Go](https://img.shields.io/badge/go-1.27.0-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
@@ -31,12 +31,12 @@ held to meaningful 100% statement coverage.
 ## Installation
 
 ```sh
-go get github.com/faustbrian/go-tabular@v1
+go get github.com/faustbrian/go-tabular/v2@v2
 ```
 
-The hardened v2 source is not available from the public module proxy until a
-`v2` tag is published. Existing applications must remain on v1 and configure
-explicit positive limits until then.
+The v2 module is publicly available from v2.0.0 onward. Existing v1
+applications retain their published behavior; review the
+[migration guide](docs/migration.md) before changing imports and limits.
 
 ## Quickstart
 
@@ -46,7 +46,7 @@ reader, validates its header, reads every row through `io.EOF`, and demonstrates
 stable error handling. Run it directly after installation:
 
 ```sh
-go test github.com/faustbrian/go-tabular -run '^ExampleNewDelimitedReader$' -v
+go test github.com/faustbrian/go-tabular/v2 -run '^ExampleNewDelimitedReader$' -v
 ```
 
 The [five-minute quickstart](docs/quickstart.md) explains the same complete
