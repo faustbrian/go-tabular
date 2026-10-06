@@ -124,6 +124,8 @@ jobs:
           proof_root=$(mktemp -d "${GOTMPDIR}/ole-width.XXXXXX")
           trap 'find "${proof_root}" -type d -exec chmod u+w {} +; find "${proof_root}" -depth -delete' EXIT
           mkdir "${proof_root}/before"
+          git fetch --no-tags --no-prune origin 1d21d21cd7144cd1b041fb35bc69878ae513ba12
+          test "$(git rev-parse FETCH_HEAD)" = 1d21d21cd7144cd1b041fb35bc69878ae513ba12
           git archive 1d21d21cd7144cd1b041fb35bc69878ae513ba12 | tar -x -C "${proof_root}/before"
           cp internal/xls/ole_admission_width_test.go "${proof_root}/before/internal/xls/"
           for test_name in TestOLEChainRejectsUnrepresentableSectorID TestOLESectorRejectsUnrepresentableSectorID; do
