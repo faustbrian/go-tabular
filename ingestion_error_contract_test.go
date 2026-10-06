@@ -53,8 +53,11 @@ func TestZIPChecksumPrivateDiagnosticCause(t *testing.T) {
 	if !bytes.Equal(got, want) {
 		t.Fatalf("partial bytes %q", got)
 	}
-	if !errors.Is(err, ErrorArchive) || !errors.Is(err, zip.ErrChecksum) || errors.Unwrap(err) != zip.ErrChecksum {
+	if !errors.Is(err, ErrorArchive) || !errors.Is(err, zip.ErrChecksum) {
 		t.Fatalf("checksum cause lost: %v", err)
+	}
+	if errors.Unwrap(err) != zip.ErrChecksum { //nolint:errorlint // Require the original checksum sentinel as the direct cause.
+		t.Fatalf("direct checksum cause changed: %v", err)
 	}
 	var detail *Error
 	if !errors.As(err, &detail) || err.Error() != "tabular: zip.entry.read zip: archive error" || strings.Contains(err.Error(), name) || strings.Contains(err.Error(), payload) {
@@ -132,8 +135,11 @@ func TestCSVClosingQuoteGrammarParity(t *testing.T) {
 					continue
 				}
 				var actual, expected *csv.ParseError
-				if got != nil || !errors.Is(err, ErrorMalformedRow) || !errors.As(err, &actual) || !errors.As(wantErr, &expected) || actual.StartLine != expected.StartLine || actual.Line != expected.Line || actual.Column != expected.Column || actual.Err != expected.Err || err.Error() != "tabular: delimited.read delimited row 1: malformed row" {
+				if got != nil || !errors.Is(err, ErrorMalformedRow) || !errors.As(err, &actual) || !errors.As(wantErr, &expected) || actual.StartLine != expected.StartLine || actual.Line != expected.Line || actual.Column != expected.Column || err.Error() != "tabular: delimited.read delimited row 1: malformed row" {
 					t.Fatalf("malformed grammar parity: %v %v; standard %v", got, err, wantErr)
+				}
+				if actual.Err != expected.Err { //nolint:errorlint // Require exact standard-library ParseError cause identity.
+					t.Fatalf("direct parse cause changed: %v; standard %v", actual.Err, expected.Err)
 				}
 			}
 		})

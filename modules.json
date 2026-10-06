@@ -98,7 +98,7 @@
         "package_selection": {
           "github.com/faustbrian/go-tabular/v2": "Use for explicit, bounded tabular ingestion from caller-provided readers and random-access sources after the v2 release."
         },
-        "lifecycle_status": "stable",
+        "lifecycle_status": "active",
         "maturity": "preview",
         "construction_styles": [
           "new-config",

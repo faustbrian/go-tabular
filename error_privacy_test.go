@@ -27,7 +27,7 @@ func TestDefaultDiagnosticPreservesTrustedCauseWithoutDisclosure(t *testing.T) {
 	if got := err.Error(); got != "tabular: delimited.read csv row 1: malformed row" {
 		t.Fatalf("default diagnostic = %q", got)
 	}
-	if errors.Unwrap(err) != cause {
+	if errors.Unwrap(err) != cause { //nolint:errorlint // Require direct cause identity, not wrapped equivalence.
 		t.Fatal("direct cause identity changed")
 	}
 	var typed *diagnosticSourceError
