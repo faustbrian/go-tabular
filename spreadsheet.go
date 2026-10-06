@@ -5,10 +5,13 @@ import (
 	"io"
 	"slices"
 
-	internalxls "github.com/faustbrian/go-tabular/internal/xls"
+	internalxls "github.com/faustbrian/go-tabular/v2/internal/xls"
 )
 
-const defaultMaxWorkbookBytes int64 = 64 * 1024 * 1024
+const (
+	defaultMaxWorkbookBytes int64 = 64 * 1024 * 1024
+	defaultMaxSheets              = 128
+)
 
 // SpreadsheetFormat identifies an explicitly selected workbook format.
 type SpreadsheetFormat string
@@ -34,15 +37,20 @@ type SpreadsheetConfig struct {
 	PreserveCellPresence bool
 	MaxWorkbookBytes     int64
 	// MaxRecordBytes bounds one parsed worksheet row before normalization.
-	// Zero preserves the unbounded legacy behavior.
+	// Zero selects a finite 1 MiB default.
 	MaxRecordBytes int
 	// MaxFieldBytes bounds one parsed worksheet cell before normalization.
-	// Zero preserves the unbounded legacy behavior.
+	// Zero selects a finite 1 MiB default.
 	MaxFieldBytes int
-	// MaxSheets bounds the number of worksheets in an XLSX workbook.
-	// Zero preserves the unbounded legacy behavior.
+	// MaxSheets bounds worksheets in XLS and XLSX workbooks.
+	// Zero selects a finite 128-sheet default.
 	MaxSheets int
-	ZIP       ZIPConfig
+	// MaxMaterializedCells bounds cumulative dense XLS cell slots across all
+	// sheets before allocation, charging at least one per empty or absent row.
+	// Zero selects 1,000,000. Positive values override it. XLSX streams rows and
+	// does not use this XLS-specific budget.
+	MaxMaterializedCells int
+	ZIP                  ZIPConfig
 }
 
 // SpreadsheetCell is one immutable decoded worksheet cell.
@@ -131,16 +139,9 @@ func (*xlsRowSource) Close() error { return nil }
 func OpenSpreadsheet(source io.ReaderAt, size int64, config SpreadsheetConfig) (*SpreadsheetReader, error) {
 	if source == nil || size < 0 || config.FieldsPerRecord < 0 ||
 		config.MaxWorkbookBytes < 0 || config.MaxRecordBytes < 0 ||
-		config.MaxFieldBytes < 0 || config.MaxSheets < 0 ||
+		config.MaxFieldBytes < 0 || config.MaxSheets < 0 || config.MaxMaterializedCells < 0 ||
 		(config.Format != FormatXLS && config.Format != FormatXLSX) {
 		return nil, &Error{Kind: ErrorInvalidConfig, Op: "spreadsheet.open", Format: string(config.Format)}
-	}
-	if config.Format == FormatXLSX {
-		source, err := openXLSXRows(source, size, config)
-		if err != nil {
-			return nil, err
-		}
-		return newSpreadsheetReader(source, config), nil
 	}
 	limit := config.MaxWorkbookBytes
 	if limit == 0 {
@@ -149,18 +150,24 @@ func OpenSpreadsheet(source io.ReaderAt, size int64, config SpreadsheetConfig) (
 	if size > limit {
 		return nil, &Error{Kind: ErrorLimitExceeded, Op: "spreadsheet.open", Format: string(config.Format)}
 	}
+	if config.Format == FormatXLSX {
+		source, err := openXLSXRows(source, size, config)
+		if err != nil {
+			return nil, err
+		}
+		return newSpreadsheetReader(source, config), nil
+	}
 	data, err := io.ReadAll(io.NewSectionReader(source, 0, size))
 	if err != nil {
 		return nil, &Error{Kind: ErrorSpreadsheet, Op: "spreadsheet.open", Format: string(config.Format), Err: err}
 	}
-	var workbook *internalxls.Workbook
-	if config.PreserveCellPresence {
-		workbook, err = internalxls.OpenWithPresence(data)
-	} else {
-		workbook, err = internalxls.Open(data)
-	}
+	workbook, err := internalxls.OpenBounded(data, config.PreserveCellPresence, config.MaxSheets, config.MaxMaterializedCells)
 	if err != nil {
-		return nil, &Error{Kind: ErrorSpreadsheet, Op: "spreadsheet.open", Format: string(config.Format), Err: err}
+		kind := ErrorSpreadsheet
+		if errors.Is(err, internalxls.ErrLimit) {
+			kind = ErrorLimitExceeded
+		}
+		return nil, &Error{Kind: kind, Op: "spreadsheet.open", Format: string(config.Format), Err: err}
 	}
 	sheetIndex := 0
 	if config.Sheet != "" {
@@ -179,6 +186,14 @@ func OpenSpreadsheet(source io.ReaderAt, size int64, config SpreadsheetConfig) (
 }
 
 func newSpreadsheetReader(source spreadsheetRowSource, config SpreadsheetConfig) *SpreadsheetReader {
+	maxRecordBytes := config.MaxRecordBytes
+	if maxRecordBytes == 0 {
+		maxRecordBytes = defaultMaxRecordBytes
+	}
+	maxFieldBytes := config.MaxFieldBytes
+	if maxFieldBytes == 0 {
+		maxFieldBytes = defaultMaxRecordBytes
+	}
 	return &SpreadsheetReader{
 		source:           source,
 		format:           config.Format,
@@ -188,8 +203,8 @@ func newSpreadsheetReader(source spreadsheetRowSource, config SpreadsheetConfig)
 		variable:         config.AllowVariableFields,
 		preserveErrors:   config.PreserveCellErrors,
 		preservePresence: config.PreserveCellPresence,
-		maxRecordBytes:   config.MaxRecordBytes,
-		maxFieldBytes:    config.MaxFieldBytes,
+		maxRecordBytes:   maxRecordBytes,
+		maxFieldBytes:    maxFieldBytes,
 	}
 }
 
@@ -350,21 +365,16 @@ func (reader *SpreadsheetReader) spreadsheetValues(
 func (reader *SpreadsheetReader) validateLimits(
 	cells []spreadsheetCell,
 ) error {
-	if reader.maxFieldBytes > 0 {
-		for index, cell := range cells {
-			if len(reader.outputCellValue(cell)) > reader.maxFieldBytes {
-				return &Error{
-					Kind:   ErrorLimitExceeded,
-					Op:     "spreadsheet.read",
-					Format: string(reader.format),
-					Row:    reader.index,
-					Field:  index + 1,
-				}
+	for index, cell := range cells {
+		if len(reader.outputCellValue(cell)) > reader.maxFieldBytes {
+			return &Error{
+				Kind:   ErrorLimitExceeded,
+				Op:     "spreadsheet.read",
+				Format: string(reader.format),
+				Row:    reader.index,
+				Field:  index + 1,
 			}
 		}
-	}
-	if reader.maxRecordBytes == 0 {
-		return nil
 	}
 	remaining := reader.maxRecordBytes
 	for _, cell := range cells {

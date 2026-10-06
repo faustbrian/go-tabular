@@ -45,7 +45,7 @@ Delimited and fixed-width constructors do not read input, and regression tests
 feed one-byte chunks to prove the first row can be returned without consuming
 the complete source. ZIP entry extraction is streamed through `io.Copy`.
 
-XLS necessarily materializes its source and rejects files above
+XLS necessarily materializes its source. Both formats reject source files above
 `MaxWorkbookBytes`. XLSX returns rows incrementally, but validation and
 Excelize may allocate substantially more heap than the compressed workbook
 size. Profiling the optimized large case attributes most remaining allocation

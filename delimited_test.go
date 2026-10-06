@@ -519,17 +519,48 @@ func TestDelimitedReaderEnforcesRecordAndFieldLimits(t *testing.T) {
 		t.Fatalf("strict malformed-quote error = %v", err)
 	}
 
-	unboundedValue := strings.Repeat("a", (1<<20)+1)
-	unbounded, err := NewCSVReader(
-		strings.NewReader(unboundedValue+"\n"),
+	oversizedValue := strings.Repeat("a", (1<<20)+1)
+	defaultLimited, err := NewCSVReader(
+		strings.NewReader(oversizedValue+"\n"),
 		DelimitedConfig{},
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	row, err = unbounded.Read()
-	if err != nil || !reflect.DeepEqual(row, Row{unboundedValue}) {
-		t.Fatalf("zero-limit Read() row count = %d, %v", len(row), err)
+	if _, err = defaultLimited.Read(); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("zero-limit Read() error = %v, want limit exceeded", err)
+	}
+}
+
+func TestDelimitedReaderAppliesSafeDefaultRecordLimit(t *testing.T) {
+	t.Parallel()
+
+	reader, err := NewCSVReader(
+		strings.NewReader(strings.Repeat("x", defaultMaxRecordBytes+1)+"\n"),
+		DelimitedConfig{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = reader.Read(); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("Read() error = %v, want limit exceeded", err)
+	}
+}
+
+func TestDelimitedReaderAppliesSafeDefaultFieldLimit(t *testing.T) {
+	t.Parallel()
+
+	reader, err := NewCSVReader(
+		strings.NewReader(strings.Repeat("x", defaultMaxRecordBytes+1)+"\n"),
+		DelimitedConfig{MaxRecordBytes: 2 * defaultMaxRecordBytes},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var limitError *Error
+	if _, err = reader.Read(); !errors.Is(err, ErrorLimitExceeded) ||
+		!errors.As(err, &limitError) || limitError.Field != 1 {
+		t.Fatalf("Read() error = %#v, want field 1 limit exceeded", err)
 	}
 }
 

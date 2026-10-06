@@ -1,5 +1,10 @@
 # Releasing
 
+The active root source uses v2. Do not create a v2 tag until every required
+producer release gate passes. Verify the actual public module before owned
+consumer adoption; do not substitute local source or `replace` directives for
+that boundary. Public tags and releases establish the actual publication state.
+
 ## Preconditions
 
 Release from a clean, synchronized `main` branch. Add one dated release

@@ -49,11 +49,16 @@ func OpenWithPresence(data []byte) (*Workbook, error) {
 }
 
 func open(data []byte, preservePresence bool) (*Workbook, error) {
+	return OpenBounded(data, preservePresence, 0, 0)
+}
+
+// OpenBounded applies workbook-wide sheet and cell admission before decoding.
+func OpenBounded(data []byte, preservePresence bool, maxSheets, maxCells int) (*Workbook, error) {
 	stream, err := openWorkbookStream(data)
 	if err != nil {
 		return nil, err
 	}
-	return parseBIFF8State(stream, preservePresence)
+	return parseBIFF8Limited(stream, preservePresence, maxSheets, maxCells)
 }
 
 func parseBIFF8(data []byte) (*Workbook, error) {
@@ -61,12 +66,26 @@ func parseBIFF8(data []byte) (*Workbook, error) {
 }
 
 func parseBIFF8State(data []byte, preservePresence bool) (*Workbook, error) {
+	return parseBIFF8Limited(data, preservePresence, 0, 0)
+}
+
+func parseBIFF8Limited(data []byte, preservePresence bool, maxSheets, maxCells int) (*Workbook, error) {
+	if maxSheets == 0 {
+		maxSheets = defaultMaxSheets
+	}
+	if maxCells == 0 {
+		maxCells = defaultMaxCells
+	}
+	if maxSheets < 0 || maxCells < 0 {
+		return nil, ErrLimit
+	}
 	first, err := readRecord(data, 0)
 	if err != nil || first.id != 0x0809 || len(first.payload) < 4 || binary.LittleEndian.Uint16(first.payload[:2]) != 0x0600 {
 		return nil, errors.New("xls: BIFF8 workbook globals not found")
 	}
 	var sheets []boundSheet
 	var shared []string
+	globalsEnd := 0
 globals:
 	for offset := 0; ; {
 		rec, recErr := readRecord(data, offset)
@@ -75,6 +94,9 @@ globals:
 		}
 		switch rec.id {
 		case 0x0085:
+			if len(sheets) >= maxSheets {
+				return nil, ErrLimit
+			}
 			sheet, sheetErr := parseBoundSheet(rec.payload)
 			if sheetErr != nil {
 				return nil, sheetErr
@@ -100,6 +122,7 @@ globals:
 			}
 			rec.next = next
 		case 0x000a:
+			globalsEnd = rec.next
 			break globals
 		}
 		offset = rec.next
@@ -108,9 +131,33 @@ globals:
 		return nil, errors.New("xls: workbook contains no sheets")
 	}
 
+	type span struct{ start, end int }
+	spans := make([]span, 0, len(sheets))
+	remaining := maxCells
+	for _, definition := range sheets {
+		start := int(definition.offset)
+		if uint64(definition.offset) > uint64(len(data)) || start < globalsEnd {
+			return nil, errors.New("invalid worksheet offset")
+		}
+		for _, prior := range spans {
+			if start >= prior.start && start < prior.end {
+				return nil, errors.New("overlapping worksheet offsets")
+			}
+		}
+		end, err := admitSheet(data, start, &remaining)
+		if err != nil {
+			return nil, err
+		}
+		for _, prior := range spans {
+			if start < prior.end && end > prior.start {
+				return nil, errors.New("overlapping worksheet offsets")
+			}
+		}
+		spans = append(spans, span{start, end})
+	}
 	workbook := &Workbook{Sheets: make([]Sheet, 0, len(sheets))}
 	for _, definition := range sheets {
-		rows, presence, rowErr := parseSheetState(
+		rows, presence, rowErr := parseAdmittedSheet(
 			data,
 			int(definition.offset),
 			shared,
@@ -172,26 +219,27 @@ func parseSheetState(
 	shared []string,
 	preservePresence bool,
 ) ([][]Cell, [][]bool, error) {
-	first, err := readRecord(data, offset)
-	if err != nil || first.id != 0x0809 {
-		return nil, nil, errors.New("worksheet BOF not found")
+	remaining := defaultMaxCells
+	if _, err := admitSheet(data, offset, &remaining); err != nil {
+		return nil, nil, err
 	}
+	return parseAdmittedSheet(data, offset, shared, preservePresence)
+}
+
+// parseAdmittedSheet projects the same owned bytes already checked by
+// admitSheet through worksheet EOF, including BOF, record bounds and ROW size.
+// Its two callers perform that admission without intervening collaborators.
+func parseAdmittedSheet(data []byte, offset int, shared []string, preservePresence bool) ([][]Cell, [][]bool, error) {
 	rows := make(map[int]map[int]Cell)
 	widths := make(map[int]int)
 	maxRow := -1
 	for {
-		rec, recErr := readRecord(data, offset)
-		if recErr != nil {
-			return nil, nil, recErr
-		}
+		rec, _ := readRecord(data, offset)
 		if rec.id == 0x000a {
 			break
 		}
 		switch rec.id {
 		case 0x0208:
-			if len(rec.payload) < 6 {
-				return nil, nil, errors.New("truncated ROW record")
-			}
 			row := int(binary.LittleEndian.Uint16(rec.payload[:2]))
 			last := int(binary.LittleEndian.Uint16(rec.payload[4:6]))
 			widths[row] = max(widths[row], last)
@@ -317,7 +365,7 @@ func setCell(rows map[int]map[int]Cell, widths map[int]int, row, column int, cel
 func decodeRK(raw uint32) string {
 	scaled := raw&1 != 0
 	if raw&2 != 0 {
-		value := float64(int32(raw) >> 2)
+		value := float64(int32(raw) >> 2) // #nosec G115 -- BIFF RK integer bits use two's-complement signed decoding; shifting removes the two format flags.
 		if scaled {
 			value /= 100
 		}
@@ -373,7 +421,7 @@ func parseSST(segments [][]byte) ([]string, error) {
 		return nil, errors.New("xls: truncated SST header")
 	}
 	count := binary.LittleEndian.Uint32(header[4:8])
-	if uint64(count) > uint64(reader.remaining())/3 {
+	if uint64(count) > uint64(reader.remaining())/3 { // #nosec G115 -- Owned SST/CONTINUE payloads total at most the admitted workbook bytes; remaining is nonnegative.
 		return nil, errors.New("xls: invalid SST string count")
 	}
 	strings := make([]string, 0, count)

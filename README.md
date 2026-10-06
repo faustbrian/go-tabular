@@ -16,8 +16,11 @@ format auto-detection or implicit data conversion.
 
 ## Status
 
-The package has a stable v1 API. Supported behavior is fixture-backed, fuzzed,
-benchmarked, and held to meaningful 100% production coverage.
+This source tree defines `github.com/faustbrian/go-tabular/v2` with finite
+security defaults. Public tags and releases establish version availability;
+historical v1 retains its original defaults. Release gates and subsequent
+public-module consumer adoption are separate boundaries. Production code is
+held to meaningful 100% statement coverage.
 
 ## Requirements
 
@@ -30,6 +33,10 @@ benchmarked, and held to meaningful 100% production coverage.
 ```sh
 go get github.com/faustbrian/go-tabular@v1
 ```
+
+The hardened v2 source is not available from the public module proxy until a
+`v2` tag is published. Existing applications must remain on v1 and configure
+explicit positive limits until then.
 
 ## Quickstart
 
@@ -51,9 +58,9 @@ ZIP-backed, and spreadsheet ingestion.
 - explicit format and encoding selection
 - streaming delimited, fixed-width, ZIP-entry, and XLSX row processing
 - bounded XLS materialization for OLE2/BIFF8 random access
-- archive entry-count, size, compression-ratio, path, link, and duplicate checks
-- opt-in XLSX worksheet-count limits
-- opt-in parsed record and field limits for delimited and spreadsheet rows
+- archive source-size, entry-count, expansion, compression-ratio, path, link,
+  and duplicate checks
+- finite defaults for XLSX worksheet counts and parsed delimited/spreadsheet rows
 - opt-in absent-versus-stored-empty spreadsheet cell preservation
 - opt-in normalization that does not mutate caller-owned rows
 - stable error kinds with one-based row and field coordinates
@@ -63,17 +70,17 @@ See [formats](docs/formats.md) and
 
 ## Package Map And Ownership
 
-- `github.com/faustbrian/go-tabular` is the only public package. It owns
-  explicit tabular decoding, validation, limits, normalization, and stable
-  error categories.
+- The root module is the only public package. It owns explicit tabular
+  decoding, validation, limits, normalization, and stable error categories.
 - `internal/xls` is an implementation detail for the documented BIFF8 subset;
   consumers cannot import it and it is not a compatibility surface.
 
 The package never closes caller-provided sources. Delimited and fixed-width
 readers retain their `io.Reader`, and `ZIPArchive` retains its `io.ReaderAt`.
-XLS input is fully consumed by `OpenSpreadsheet`; XLSX callers should keep the
-source available until the spreadsheet reader closes because presence-aware
-iteration retains archive entry readers. Callers must close spreadsheet
+XLS input is fully consumed by `OpenSpreadsheet`; XLSX captures a bounded owned
+revision during construction, shared by admission, parsing, and presence-aware
+iteration. Sources may be released after successful construction. Callers must
+close spreadsheet
 readers and readers returned by `ZIPArchive.Open`. The package starts no
 goroutines, performs no retries, and has no hidden shutdown phase. Reader
 instances are stateful and are not safe for concurrent method calls; callers
@@ -81,10 +88,8 @@ own serialization.
 
 Constructors take explicit configuration values, validate them before parsing,
 and copy retained mutable fields. Zero values select documented finite archive,
-fixed-width, and XLS limits, but preserve legacy unbounded record, field,
-worksheet, and compression-ratio behavior where stated in the
-[API reference](docs/api.md). Applications ingesting untrusted data must set
-the opt-in limits required by their own policy.
+workbook, worksheet, record, and field limits. Applications should set smaller
+positive limits when their ingest policy is narrower than those defaults.
 
 Parsing is deliberately context-free: operations synchronously consume the
 caller-provided `io.Reader` or `io.ReaderAt` and do not perform network I/O.

@@ -18,6 +18,7 @@ Use this index to select a tabular format and define safe ingest limits.
 - [Compatibility](compatibility.md)
 - [Performance](performance.md)
 - [Security](security.md)
+- [Threat model](threat-model.md)
 
 ## Troubleshooting and migration
 
