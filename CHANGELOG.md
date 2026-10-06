@@ -14,6 +14,9 @@ consumers retain their published behavior without local `replace` directives.
 
 ### Maintenance
 
+- Update the spreadsheet parser's x/text dependency to v0.42.0 for Unicode
+  normalization correctness fixes while retaining the root's Go 1.27 floor.
+
 - Adopt the checksum-pinned public Golib v1.8.5 CLI and an explicit source-built
   root release qualification route. Four independently reviewed XLS boundary
   equivalents retain their native status under exact source/verifier binding;
