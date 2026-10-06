@@ -2,6 +2,7 @@ package tabular
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
 	"os"
@@ -166,6 +167,42 @@ func TestXLSReaderEnforcesMaterializationLimit(t *testing.T) {
 	})
 	if !errors.Is(err, ErrorLimitExceeded) {
 		t.Fatalf("OpenSpreadsheet() error = %v, want limit-exceeded kind", err)
+	}
+}
+
+func TestXLSReaderRefusesMissingPhysicalWorkbookSector(t *testing.T) {
+	data, err := os.ReadFile("testdata/spreadsheet/table.xls")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Retain the real workbook prefix and declared stream size, but replace its
+	// final sector with the first physically absent ID in the same FAT table.
+	sectorSize := 1 << binary.LittleEndian.Uint16(data[30:32])
+	fatSector := binary.LittleEndian.Uint32(data[76:80])
+	fatOffset := (int(fatSector) + 1) * sectorSize
+	physicalCount := len(data)/sectorSize - 1
+	if sectorSize != 512 || physicalCount != 39 ||
+		binary.LittleEndian.Uint32(data[fatOffset+33*4:fatOffset+34*4]) != 34 {
+		t.Fatal("ordinary workbook fixture geometry changed")
+	}
+	binary.LittleEndian.PutUint32(data[fatOffset+33*4:fatOffset+34*4], uint32(physicalCount))
+	binary.LittleEndian.PutUint32(data[fatOffset+physicalCount*4:fatOffset+(physicalCount+1)*4], 0xfffffffe)
+	for _, presence := range []bool{false, true} {
+		reader, openErr := OpenSpreadsheet(bytes.NewReader(data), int64(len(data)), SpreadsheetConfig{
+			Format: FormatXLS, PreserveCellPresence: presence,
+		})
+		if reader != nil {
+			closeTestResource(t, reader)
+		}
+		if reader != nil || !errors.Is(openErr, ErrorSpreadsheet) {
+			t.Fatalf("missing physical sector admission (presence=%v): reader=%v, error=%v", presence, reader != nil, openErr)
+		}
+		var diagnostic *Error
+		if !errors.As(openErr, &diagnostic) || diagnostic.Err == nil ||
+			diagnostic.Err.Error() != "xls: sector outside file" ||
+			strings.Contains(openErr.Error(), "sector outside file") {
+			t.Fatalf("missing physical sector diagnostic (presence=%v): %v", presence, openErr)
+		}
 	}
 }
 

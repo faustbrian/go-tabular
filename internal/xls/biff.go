@@ -365,7 +365,7 @@ func setCell(rows map[int]map[int]Cell, widths map[int]int, row, column int, cel
 func decodeRK(raw uint32) string {
 	scaled := raw&1 != 0
 	if raw&2 != 0 {
-		value := float64(int32(raw) >> 2)
+		value := float64(int32(raw) >> 2) // #nosec G115 -- BIFF RK integer bits use two's-complement signed decoding; shifting removes the two format flags.
 		if scaled {
 			value /= 100
 		}
@@ -421,7 +421,7 @@ func parseSST(segments [][]byte) ([]string, error) {
 		return nil, errors.New("xls: truncated SST header")
 	}
 	count := binary.LittleEndian.Uint32(header[4:8])
-	if uint64(count) > uint64(reader.remaining())/3 {
+	if uint64(count) > uint64(reader.remaining())/3 { // #nosec G115 -- Owned SST/CONTINUE payloads total at most the admitted workbook bytes; remaining is nonnegative.
 		return nil, errors.New("xls: invalid SST string count")
 	}
 	strings := make([]string, 0, count)

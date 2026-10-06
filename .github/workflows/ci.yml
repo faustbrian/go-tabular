@@ -112,6 +112,33 @@ jobs:
           test "$(git rev-parse HEAD)" = dbce31aab4f15b3440e0559d3e2bad8912b6e567
           go build -p 1 -trimpath -buildvcs=false -o "${GOTMPDIR}/golib" ./cmd/golib
           test "$("${GOTMPDIR}/golib" --version)" = dev
+      - name: Prove wire sector admission on linux 386
+        timeout-minutes: 10
+        working-directory: release-producer
+        env:
+          GOOS: linux
+          GOARCH: '386'
+          CGO_ENABLED: '0'
+        run: |
+          set -euo pipefail
+          proof_root=$(mktemp -d "${GOTMPDIR}/ole-width.XXXXXX")
+          trap 'find "${proof_root}" -type d -exec chmod u+w {} +; find "${proof_root}" -depth -delete' EXIT
+          mkdir "${proof_root}/before"
+          git archive 1d21d21cd7144cd1b041fb35bc69878ae513ba12 | tar -x -C "${proof_root}/before"
+          cp internal/xls/ole_admission_width_test.go "${proof_root}/before/internal/xls/"
+          for test_name in TestOLEChainRejectsUnrepresentableSectorID TestOLESectorRejectsUnrepresentableSectorID; do
+            case "${test_name}" in
+              TestOLEChainRejectsUnrepresentableSectorID) expected_panic='panic: runtime error: index out of range' ;;
+              TestOLESectorRejectsUnrepresentableSectorID) expected_panic='panic: runtime error: slice bounds out of range' ;;
+            esac
+            if (cd "${proof_root}/before" && go test -mod=readonly -p=1 -count=1 -v -run "^${test_name}$" ./internal/xls) >"${proof_root}/${test_name}.log" 2>&1; then
+              printf 'Pre-fix 386 admission unexpectedly passed: %s\n' "${test_name}" >&2
+              exit 1
+            fi
+            grep -F -- "${expected_panic}" "${proof_root}/${test_name}.log"
+            grep -F -- "--- FAIL: ${test_name}" "${proof_root}/${test_name}.log"
+          done
+          go test -mod=readonly -p=1 -count=1 -v -run '^(TestOLEChainRejectsUnrepresentableSectorID|TestOLESectorRejectsUnrepresentableSectorID)$' ./internal/xls
       - name: Validate producer authorities and complete root release contract
         working-directory: release-producer
         run: |

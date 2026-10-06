@@ -91,7 +91,7 @@ func parseCompoundFile(data []byte) (*compoundFile, error) {
 	}
 
 	numFAT := binary.LittleEndian.Uint32(data[44:48])
-	if numFAT > uint32(compound.sectorCount()) {
+	if !countFits(numFAT, compound.sectorCount()) {
 		return nil, errors.New("xls: invalid FAT sector count")
 	}
 	difatStart := binary.LittleEndian.Uint32(data[68:72])
@@ -152,10 +152,10 @@ func readDIFAT(
 	sectorCount uint32,
 	fatCount uint32,
 ) ([]uint32, error) {
-	if uint64(sectorCount) > uint64(compound.sectorCount()) {
+	if uint64(sectorCount) > uint64(compound.sectorCount()) { // #nosec G115 -- Validated whole 512/4096-byte sectors make the physical count nonnegative.
 		return nil, errors.New("xls: invalid DIFAT sector count")
 	}
-	if uint64(fatCount) > uint64(compound.sectorCount()) {
+	if uint64(fatCount) > uint64(compound.sectorCount()) { // #nosec G115 -- Validated whole 512/4096-byte sectors make the physical count nonnegative.
 		return nil, errors.New("xls: invalid FAT sector count")
 	}
 	difat := make([]uint32, 0, fatCount)
@@ -184,10 +184,15 @@ func readDIFAT(
 		appendFATSectors(sector[:compound.sectorSize-4])
 		sectorID = binary.LittleEndian.Uint32(sector[compound.sectorSize-4:])
 	}
-	if uint32(len(difat)) < fatCount {
+	if !countFits(fatCount, len(difat)) {
 		return nil, errors.New("xls: incomplete FAT index")
 	}
 	return difat[:fatCount], nil
+}
+
+// countFits admits a wire count against a host-sized physical capacity.
+func countFits(count uint32, available int) bool {
+	return available >= 0 && uint64(count) <= uint64(available) // #nosec G115 -- The preceding nonnegative admission check makes host capacity safe to widen.
 }
 
 func parseDirectories(directoryBytes []byte, major uint16) ([]directory, error) {
@@ -222,7 +227,7 @@ func parseDirectories(directoryBytes []byte, major uint16) ([]directory, error) 
 }
 
 func streamSize(count uint32, size int) uint64 {
-	return uint64(count) * uint64(size)
+	return uint64(count) * uint64(size) // #nosec G115 -- The sole production caller supplies the validated positive 512/4096-byte sector size.
 }
 
 func findRoot(directories []directory) *directory {
@@ -247,17 +252,20 @@ func (compound *compoundFile) readRegularStream(start uint32, size uint64) ([]by
 		return nil, err
 	}
 	if size == 0 {
-		size = uint64(len(chain) * compound.sectorSize)
+		size = uint64(len(chain) * compound.sectorSize) // #nosec G115 -- Chain count is bounded by physical sectors, so positive sector bytes fit the owned source length.
 	}
-	if size > uint64(len(chain))*uint64(compound.sectorSize) {
+	if size > uint64(len(chain))*uint64(compound.sectorSize) { // #nosec G115 -- Validated positive sector size and physically bounded chain bytes fit the owned source length.
 		return nil, errors.New("xls: stream size exceeds sector chain")
 	}
-	stream := make([]byte, 0, int(size))
+	stream := make([]byte, 0, int(size)) // #nosec G115 -- The preceding chain-byte admission bounds size by the host-sized owned source length.
 	for _, sectorID := range chain {
-		sector, _ := compound.sector(sectorID)
+		sector, sectorErr := compound.sector(sectorID)
+		if sectorErr != nil {
+			return nil, sectorErr
+		}
 		stream = append(stream, sector...)
 	}
-	return stream[:int(size)], nil
+	return stream[:int(size)], nil // #nosec G115 -- Admitted size is within the physically bounded, host-sized stream length.
 }
 
 func (compound *compoundFile) readMiniStream(start uint32, size uint64) ([]byte, error) {
@@ -265,18 +273,18 @@ func (compound *compoundFile) readMiniStream(start uint32, size uint64) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	if size > uint64(len(chain))*uint64(compound.miniSectorSize) || size > uint64(len(compound.miniStream)) {
+	if size > uint64(len(chain))*uint64(compound.miniSectorSize) || size > uint64(len(compound.miniStream)) { // #nosec G115 -- The parsed mini-sector size is positive 64; the second guard bounds size by owned host-sized storage.
 		return nil, errors.New("xls: mini stream size exceeds chain")
 	}
-	stream := make([]byte, 0, int(size))
+	stream := make([]byte, 0, int(size)) // #nosec G115 -- The preceding admission bounds size by len(miniStream), which fits host int.
 	for _, sectorID := range chain {
-		offset := uint64(sectorID) * uint64(compound.miniSectorSize)
-		if offset+uint64(compound.miniSectorSize) > uint64(len(compound.miniStream)) {
+		offset := uint64(sectorID) * uint64(compound.miniSectorSize)                   // #nosec G115 -- Parsed mini sectors are 64 bytes; uint32 ID multiplication fits uint64.
+		if offset+uint64(compound.miniSectorSize) > uint64(len(compound.miniStream)) { // #nosec G115 -- Parsed mini-sector size is positive 64 and offset-plus-size fits uint64.
 			return nil, errors.New("xls: mini sector outside root stream")
 		}
-		stream = append(stream, compound.miniStream[offset:offset+uint64(compound.miniSectorSize)]...)
+		stream = append(stream, compound.miniStream[offset:offset+uint64(compound.miniSectorSize)]...) // #nosec G115 -- The preceding offset-plus-64 guard bounds both indexes by owned mini-stream length.
 	}
-	return stream[:int(size)], nil
+	return stream[:int(size)], nil // #nosec G115 -- Size was admitted against len(miniStream), so the host-int conversion is exact.
 }
 
 func (compound *compoundFile) chain(start uint32, table []uint32, limit int) ([]uint32, error) {
@@ -286,7 +294,7 @@ func (compound *compoundFile) chain(start uint32, table []uint32, limit int) ([]
 	chain := make([]uint32, 0)
 	seen := make(map[uint32]struct{})
 	for current := start; current != endOfChain; current = table[current] {
-		if current == freeSector || int(current) >= len(table) || len(chain) >= limit {
+		if current == freeSector || uint64(current) >= uint64(len(table)) || len(chain) >= limit {
 			return nil, errors.New("xls: invalid sector chain")
 		}
 		if _, exists := seen[current]; exists {
@@ -303,9 +311,9 @@ func (compound *compoundFile) sectorCount() int {
 }
 
 func (compound *compoundFile) sector(id uint32) ([]byte, error) {
-	if int(id) >= compound.sectorCount() {
+	if uint64(id) >= uint64(compound.sectorCount()) { // #nosec G115 -- Parsed whole 512/4096-byte geometry makes physical sector count nonnegative; IDs are checked before indexing.
 		return nil, errors.New("xls: sector outside file")
 	}
-	offset := (uint64(id) + 1) * uint64(compound.sectorSize)
-	return compound.data[offset : offset+uint64(compound.sectorSize)], nil
+	offset := (uint64(id) + 1) * uint64(compound.sectorSize)               // #nosec G115 -- Sector size is validated positive 512/4096 and the admitted ID bounds offset within owned data.
+	return compound.data[offset : offset+uint64(compound.sectorSize)], nil // #nosec G115 -- The admitted physical sector and validated positive geometry bound the end index by len(data).
 }

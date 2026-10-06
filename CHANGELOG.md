@@ -23,6 +23,11 @@ consumers retain their published behavior without local `replace` directives.
 
 ### Security
 
+- Preserve XLS physical sector-count capacity without narrowing host-sized
+  lengths, and refuse out-of-range wire sector IDs before host-width indexing.
+  Propagate missing physical stream-sector errors instead of substituting
+  zero-filled bytes, without publishing a partially admitted workbook.
+  Valid workbook and RK value semantics remain unchanged on 32- and 64-bit hosts.
 - Reject XLSX sheet names, application relationship IDs and targets rewritten
   by the pinned parser's namespace translation, preserving admitted worksheet
   identity.
