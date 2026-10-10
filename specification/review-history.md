@@ -1,5 +1,37 @@
 # Upstream review history
 
+## 2026-10-10: complete monitoring review
+
+All twelve monitoring entries were retrieved from their eight distinct HTTPS
+authorities with the selected checker's user agent and decompression semantics.
+RFC 4180 and its errata, XML Fifth Edition and its errata, and PKWARE APPNOTE
+6.3.10 remain byte-identical to their monitoring pins. The thirty-day cadence
+and all authority URLs remain unchanged.
+
+The three Microsoft publication-page digests changed and were stable across
+two independent requests:
+
+| Authorities | Previous SHA-256 | Current SHA-256 |
+| --- | --- | --- |
+| `ms-cfb-source`, `ms-cfb-releases` | `1c5734314a7536110ad65218ce2cd94e99ecd834efddadfe12ee0f56d71060b4` | `83ef929ae281404fe7a81e275b59eda5e58712d78c974212d5c728df733d36a3` |
+| `ms-xls-source`, `ms-xls-releases` | `134fa182bfb4299e7fe0561a16bd86ec16c775e69a8ffece806e055c8603665d` | `58000e0cf0037737d313453b814d9c556fbfa6bddad46508827cf13fac88dbfd` |
+| `ooxml-source`, `ooxml-releases` | `a62ff4fd5766edb8f80e157f41e72bd5a123df488407dd6aca59d932587ec6c8` | `23a4f80d85f4d54d1fb179312817f9b9747f236ac1d3dbd8def7ea8375aa7f15` |
+
+Current pages still identify MS-CFB 12.0, MS-XLS 12.2 and MS-OI29500 25.0.
+Their normative PDFs were independently retrieved and match the selected
+manifest pins exactly: `9d0d61e34495347ee32f3de5b06f2d59953cc60607ea72605d4162d21a34863f`,
+`5711b0c9d3ca5821d4a7649c6e1abd0762228f7909311aeb86e90d72f64055b2`,
+and `b297063cce0ac79d10a8efd382b0f90f3b9fd6615fac7f01c88f0288e5fa7372`.
+The PDF CDN endpoints redirect to Microsoft-owned static hosts. The bounded
+retrieval explicitly accepted those exact HTTPS destinations; the monitoring
+checker's same-host redirect restriction is unchanged.
+
+Prior HTML payloads are unavailable, so this review does not attribute byte
+differences to presentation alone. Retain TABULAR-DEC-004 through TABULAR-DEC-007,
+normative pins, conformance bindings and all selected format behavior. Refresh
+the monitoring review date only after this complete authority pass; no delegate
+upgrade or runtime compatibility claim follows from this review.
+
 ## 2026-09-03
 
 The current normative payloads remain byte-identical to the manifest pins:
