@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-tabular",
+  "module": ".",
+  "package": "internal/xls",
+  "gate": "mutation",
+  "input_digest": "sha256:7b33ef578997fdb8b79b2e3151f97ed1cceedb985c0fd9e5d633ce2e68f94fde",
+  "verifier_digest": "sha256:390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+  "result": "passed",
+  "report_digest": "sha256:e178ed4203001cfd9d1abea0f67f55b3c92257262b8e43b16a72ff66737b953e",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "amd64",
+    "GOOS": "linux",
+    "GOVERSION": "go1.27.2",
+    "gremlins_binary_sha256": "sha256:433ea2397f2d68c0dd0e852ea755bf370b2bf10dee74e1261ab3c169dd9d82d0"
+  },
+  "completed_at": "2026-10-10T14:39:43.7686984Z"
+}

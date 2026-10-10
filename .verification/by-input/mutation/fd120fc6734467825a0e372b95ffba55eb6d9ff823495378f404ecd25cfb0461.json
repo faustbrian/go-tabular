@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-tabular",
+  "module": ".",
+  "package": ".",
+  "gate": "mutation",
+  "input_digest": "sha256:fd120fc6734467825a0e372b95ffba55eb6d9ff823495378f404ecd25cfb0461",
+  "verifier_digest": "sha256:390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+  "result": "passed",
+  "report_digest": "sha256:e27ebebf559065bc94df53765acf0b882fbba82609ed36e333d751502b4c48db",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "amd64",
+    "GOOS": "linux",
+    "GOVERSION": "go1.27.2",
+    "gremlins_binary_sha256": "sha256:433ea2397f2d68c0dd0e852ea755bf370b2bf10dee74e1261ab3c169dd9d82d0"
+  },
+  "completed_at": "2026-10-10T14:37:34.292942494Z"
+}
