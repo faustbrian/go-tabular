@@ -7,14 +7,28 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-10-10
+
 ### Security
 
 - Upgrade Excelize to its reviewed public security-fix revision
   v2.11.1-0.20261003002531-6258dcebc4e2 and x/net to v0.60.0. This removes
   affected dependency versions while retaining the existing spreadsheet
   admission limits, row interface and Go 1.27 language minimum.
+  ([f75b181fa9](https://github.com/faustbrian/go-tabular/commit/f75b181fa9f64340563215469735e92ceb303f5e))
 
 - TABULAR-DEC-006 sha256:0f8d3eb85bdd3166c65cbd82aeae0393d1edda9d4c4717e95e820194d28fb5f2
+
+### Maintenance
+
+- Use the patched documentation parser and Go 1.27.2 verification toolchain,
+  including the complete root release qualifier, while retaining the module's
+  Go 1.27 language minimum.
+  ([84b99f821c](https://github.com/faustbrian/go-tabular/commit/84b99f821c7e1f0dd9c524a300d8700f631784db),
+  [fd5530a363](https://github.com/faustbrian/go-tabular/commit/fd5530a363332a6aace56be9961ec363eff1de14))
+- Refresh the specification authority monitoring review while preserving the
+  selected normative format versions and byte-identical normative payloads.
+  ([1c25202fad](https://github.com/faustbrian/go-tabular/commit/1c25202fad41ac06b97d0c435d75652fefa7dceb))
 
 ## [2.0.1] - 2026-10-06
 
