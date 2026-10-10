@@ -197,7 +197,7 @@ func xlsxWorksheetTarget(
 	))
 }
 
-// Excelize v2.11.0 translates these strict namespace strings throughout XML,
+// The pinned Excelize delegate translates these strict namespace strings throughout XML,
 // not just namespace declarations. Sheet names, IDs and targets containing them
 // must not select a different part after admission. The relationship prefix
 // also covers its chart, comments, extended-properties, image and officeDocument

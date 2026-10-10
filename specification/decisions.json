@@ -179,7 +179,7 @@
       "issue": "OOXML defines typed cells, formulas, styles, shared strings, relationships, and implementation notes while the package returns normalized strings.",
       "interpretations": ["Implement SpreadsheetML value decoding locally", "Return formatted display values", "Delegate raw cell decoding to pinned Excelize and own only tabular policy"],
       "peer_behavior": "Spreadsheet libraries differ on formula evaluation, cached values, date and style formatting, error cells, and empty trailing cells.",
-      "selected_behavior": "Delegate workbook and raw cell-value decoding to Excelize v2.11.0 with RawCellValue enabled; do not evaluate formulas or promise display formatting; apply package row, error, header, and normalization policy afterward.",
+      "selected_behavior": "Delegate workbook and raw cell-value decoding to Excelize v2.11.1-0.20261003002531-6258dcebc4e2 with RawCellValue enabled; do not evaluate formulas or promise display formatting; apply package row, error, header, and normalization policy afterward.",
       "rationale": "Excelize is the maintained OOXML semantic dependency; this repository does not claim an independent full SpreadsheetML implementation.",
       "security_consequences": "Formula text and workbook features are data only and are never executed by the tabular layer.",
       "resource_consequences": "XLSX rows stream through Excelize after package-level ZIP, sheet, record, and field bounds are validated.",

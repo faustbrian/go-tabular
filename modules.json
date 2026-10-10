@@ -57,7 +57,7 @@
       "test_tags": [],
       "interoperability_tools": [
         "Go encoding/csv go1.27.0",
-        "Excelize v2.11.0",
+        "Excelize v2.11.1-0.20261003002531-6258dcebc4e2",
         "millken/xls v1.1.0 fixture"
       ],
       "specifications": [

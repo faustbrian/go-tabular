@@ -7,6 +7,15 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- Upgrade Excelize to its reviewed public security-fix revision
+  v2.11.1-0.20261003002531-6258dcebc4e2 and x/net to v0.60.0. This removes
+  affected dependency versions while retaining the existing spreadsheet
+  admission limits, row interface and Go 1.27 language minimum.
+
+- TABULAR-DEC-006 sha256:0f8d3eb85bdd3166c65cbd82aeae0393d1edda9d4c4717e95e820194d28fb5f2
+
 ## [2.0.1] - 2026-10-06
 
 ### Maintenance
