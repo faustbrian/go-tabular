@@ -19,7 +19,7 @@ do not infer automation from the reusable CI workflow.
 ## Verification
 
 ```sh
-make check
+make check-full
 ```
 
 The release is blocked unless format checks, race tests, meaningful 100%

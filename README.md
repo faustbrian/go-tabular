@@ -3,7 +3,7 @@
 [![CI](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml)
 [![CodeQL](https://img.shields.io/badge/CodeQL-required-blue)](https://github.com/faustbrian/go-tabular/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25_required-blue)](CONTRIBUTING.md#verification)
-[![Mutation](https://img.shields.io/badge/mutation-100%25_required-blue)](CONTRIBUTING.md#verification)
+[![Mutation](https://img.shields.io/badge/mutation-local_and_scheduled-blue)](CONTRIBUTING.md#verification)
 [![Documentation](https://img.shields.io/badge/docs-checked_in_CI-blue)](docs/)
 [![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-tabular/v2.svg)](https://pkg.go.dev/github.com/faustbrian/go-tabular/v2)
 [![Release](https://img.shields.io/github/v/release/faustbrian/go-tabular?sort=semver)](https://github.com/faustbrian/go-tabular/releases)
@@ -122,9 +122,11 @@ Operational and compatibility details are in [troubleshooting](docs/troubleshoot
 
 ## Development
 
-Run `make check` before submitting a change. This enforces formatting, static
-analysis, race tests, meaningful 100% coverage, parser fuzz smoke, benchmarks,
-documentation, and vulnerability scanning.
+Use standalone `go test ./...` for deterministic tests and fuzz seeds.
+`make check` and `make ci` select bounded local verification with the pinned
+public verifier; `make check-full` retains explicit full assurance. See
+[contributor verification](CONTRIBUTING.md#verification) for focused fuzzing,
+optional local mutation and release boundaries.
 
 ## Contributing
 

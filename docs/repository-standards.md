@@ -32,14 +32,17 @@ concepts.
 
 This repository uses one pinned reusable CI workflow for pull requests, main,
 scheduled verification, and manually dispatched release rehearsal. It does not
-currently automate tag or release publication. CI tests Go 1.27.0 as the
-supported minimum. The shared gate includes dependency and reachable
-vulnerability checks.
+currently automate tag or release publication. The producer uses Go 1.27.2;
+the supported module minimum remains Go 1.27.0. The shared gate includes
+dependency and reachable vulnerability checks.
 
-The public Make interface is `check`, `ci`, `cohesion`, `docs`, `inventory`,
-`repository-check`, `specification-check`, and `workflows`. The shared `golib`
-tool owns the underlying format, test, race, coverage, lint, fuzz, mutation,
-documentation, API, security, and benchmark gates.
+The public Make interface includes bounded `check` and `ci`, explicit
+`check-full`, `cohesion`, `docs`, `inventory`, `repository-check`, offline
+`specification-check`, online `specification-check-online`, and `workflows`.
+The pinned public `golib` tool owns verification. Ordinary checks run
+deterministic tests and fuzz seeds plus changed-target smoke; full race, coverage,
+fuzz, mutation, interoperability and benchmark campaigns retain their scheduled
+and release boundaries. See [contributor verification](../CONTRIBUTING.md#verification).
 
 The package family shares the `GO-SAFETY-1` baseline. It forbids `unsafe`,
 cgo, and `go:linkname` in production code and standardizes ownership,
@@ -58,6 +61,6 @@ goroutine lifecycle, race, fuzz, resource-bound, leak, and benchmark evidence.
   Apache-2.0 and retains XLS provenance notices.
 
 Code, dependencies, fuzz targets, benchmark inputs, and domain-specific
-security guidance are expected to differ. Shared policy wording and automation
-structure must not drift without updating this contract across all affected
-repositories.
+security guidance are expected to differ. Review affected contracts and direct
+consumers when shared policy changes; an unrelated sibling migration or library
+release is not a prerequisite for a standalone contribution.
