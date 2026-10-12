@@ -96,7 +96,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: faustbrian/go-library-tools
-          ref: a2f98ecc50c9fe78313a9c640e8a1b4ee68ce812
+          ref: d38bf31e7403501075442de9fde78f9479052996
           path: release-tooling
           persist-credentials: false
           fetch-depth: 1
@@ -111,7 +111,7 @@ jobs:
         working-directory: release-tooling
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = a2f98ecc50c9fe78313a9c640e8a1b4ee68ce812
+          test "$(git rev-parse HEAD)" = d38bf31e7403501075442de9fde78f9479052996
           go build -p 1 -trimpath -buildvcs=false -o "${GOTMPDIR}/golib" ./cmd/golib
           test "$("${GOTMPDIR}/golib" --version)" = dev
       - name: Prove wire sector admission on linux 386
