@@ -22,21 +22,38 @@ const (
 // default. The false link policy is safe because entries are never followed or
 // written to the filesystem.
 type ZIPConfig struct {
+	// MaxEntries limits central-directory members, including directories; zero
+	// selects 1000, negatives are invalid. It is checked after directory
+	// parsing.
 	MaxEntries int
 	// MaxArchiveBytes bounds the compressed source before ZIP parsing.
 	// Zero selects a finite 256 MiB default.
-	MaxArchiveBytes     int64
-	MaxEntryBytes       uint64
-	MaxTotalBytes       uint64
+	MaxArchiveBytes int64
+	// MaxEntryBytes limits each declared expanded size; zero selects 64 MiB.
+	// Actual entry reads use the standard ZIP size/checksum checks.
+	MaxEntryBytes uint64
+	// MaxTotalBytes limits the sum of declared expanded sizes; zero selects 256
+	// MiB. It is not a limit on cumulative repeated reads.
+	MaxTotalBytes uint64
+	// MaxCompressionRatio limits declared expanded/compressed ratio per member;
+	// zero selects 100. Nonempty entries with zero compressed size are refused.
 	MaxCompressionRatio uint64
-	RejectSymlinks      bool
+	// RejectSymlinks rejects symbolic-link metadata when true. False does not
+	// cause link following or filesystem writes.
+	RejectSymlinks bool
 }
 
-// ZIPEntry is immutable metadata for one archive member.
+// ZIPEntry is copied metadata for one archive member. Mutating an Entries
+// result does not change the indexed archive or its policies.
 type ZIPEntry struct {
-	Name             string
+	// Name is the exact admitted archive path, including a trailing slash for
+	// directories; it is not a filesystem destination.
+	Name string
+	// UncompressedSize is the member's declared expanded byte count.
 	UncompressedSize uint64
-	Directory        bool
+	// Directory reports ZIP directory metadata; directory entries cannot be
+	// opened.
+	Directory bool
 }
 
 // ZIPArchive is a validated, indexed ZIP source.
@@ -57,7 +74,10 @@ func (reader *zipEntryReader) Read(destination []byte) (int, error) {
 	return count, err
 }
 
-// OpenZIP validates and indexes an archive from a random-access source.
+// OpenZIP validates and indexes an archive from a borrowed random-access source,
+// which must remain available and unchanged while entries are read. Admission
+// uses declared sizes and does not authenticate contents or publishers. No
+// filesystem extraction or caller-source Close is performed.
 func OpenZIP(source io.ReaderAt, size int64, config ZIPConfig) (*ZIPArchive, error) {
 	if err := admitZIPSource(source, size, config); err != nil {
 		return nil, err
@@ -142,6 +162,8 @@ func admitZIPSource(source io.ReaderAt, size int64, config ZIPConfig) error {
 	return nil
 }
 
+// Quotient and remainder preserve the exact ratio boundary without multiplying
+// attacker-supplied uint64 sizes, which could overflow and admit an excess.
 func exceedsCompressionRatio(
 	uncompressed uint64,
 	compressed uint64,
@@ -158,12 +180,16 @@ func exceedsCompressionRatio(
 	return quotient > maximum || quotient == maximum && remainder != 0
 }
 
-// Entries returns archive metadata in the original central-directory order.
+// Entries returns an independent metadata slice in original central-directory
+// order. ZIPArchive must come from OpenZIP; methods require a nonnil receiver.
 func (archive *ZIPArchive) Entries() []ZIPEntry {
 	return append([]ZIPEntry(nil), archive.entries...)
 }
 
-// Open returns a streaming reader for an exact, non-directory entry name.
+// Open returns a new streaming reader for an exact, non-directory entry name.
+// The caller closes it. CRC/size validation completes only when fully read, not
+// merely on Close. ZIP codecs registered by the application are trusted code;
+// this API cannot bound their elapsed time or guarantee deterministic output.
 func (archive *ZIPArchive) Open(name string) (io.ReadCloser, error) {
 	file, ok := archive.files[name]
 	if !ok {
@@ -179,7 +205,10 @@ func (archive *ZIPArchive) Open(name string) (io.ReadCloser, error) {
 	return &zipEntryReader{ReadCloser: reader}, nil
 }
 
-// Extract streams one exact entry to destination and verifies its ZIP checksum.
+// Extract drains one exact entry to a nonnil destination, verifying ZIP CRC
+// integrity rather than authenticity. It closes the internal entry reader but
+// does not close destination; partial writes are not rolled back on error and
+// entry Close errors are ignored.
 func (archive *ZIPArchive) Extract(name string, destination io.Writer) error {
 	if destination == nil {
 		return &Error{Kind: ErrorInvalidConfig, Op: "zip.extract", Format: "zip"}

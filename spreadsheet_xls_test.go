@@ -275,6 +275,9 @@ func TestSpreadsheetCloseIsIdempotent(t *testing.T) {
 	}
 }
 
+// FuzzOpenXLS seeds a real workbook and caps the source at 1 MiB while
+// enabling cell presence. It traverses admitted rows to errors/EOF; ignored
+// BIFF records are not turned into a full conformance oracle.
 func FuzzOpenXLS(f *testing.F) {
 	data, err := os.ReadFile("testdata/spreadsheet/table.xls")
 	if err != nil {
@@ -299,6 +302,10 @@ func FuzzOpenXLS(f *testing.F) {
 	})
 }
 
+// BenchmarkXLSReader materializes a small real workbook padded to 8 MiB,
+// including per-operation byte-to-string copying and reader Close. Padding is
+// input I/O size, not additional worksheet cells. Fixture/setup is not removed
+// from timing by ResetTimer.
 func BenchmarkXLSReader(b *testing.B) {
 	data, err := os.ReadFile("testdata/spreadsheet/table.xls")
 	if err != nil {

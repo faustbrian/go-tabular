@@ -19,12 +19,25 @@ const defaultMaxDelimitedSourceBytes int64 = 64 * 1024 * 1024
 
 // DelimitedConfig explicitly controls delimited-text parsing behavior.
 type DelimitedConfig struct {
-	Delimiter           rune
-	Comment             rune
-	LazyQuotes          bool
-	TrimLeadingSpace    bool
+	// Delimiter selects the explicit separator for NewDelimitedReader.
+	// NewCSVReader overrides it with comma; no delimiter is inferred.
+	Delimiter rune
+	// Comment selects a comment marker only at line start; zero disables
+	// comments. It must differ from Delimiter.
+	Comment rune
+	// LazyQuotes opts into encoding/csv's permissive quoting behavior; false
+	// keeps its strict quote syntax.
+	LazyQuotes bool
+	// TrimLeadingSpace applies encoding/csv's leading Unicode-space handling to
+	// fields before record return, not trailing trim.
+	TrimLeadingSpace bool
+	// AllowVariableFields disables field-count validation, overriding
+	// FieldsPerRecord.
 	AllowVariableFields bool
-	FieldsPerRecord     int
+	// FieldsPerRecord is a nonnegative expected width. Zero learns the first
+	// parsed record's width (including a configured header) unless variable
+	// mode is enabled.
+	FieldsPerRecord int
 	// MaxRecordBytes bounds one logical record before parser allocation.
 	// Zero selects a finite 1 MiB default.
 	MaxRecordBytes int
@@ -34,8 +47,13 @@ type DelimitedConfig struct {
 	// MaxSourceBytes bounds all bytes consumed, including headers, blank lines and
 	// comments, before CSV parsing. Zero selects 64 MiB; positive values override it.
 	MaxSourceBytes int64
-	Header         *HeaderConfig
-	Normalize      NormalizationConfig
+	// Header enables consuming the first parsed record as a header.
+	// Construction copies the pointed value and replacement map; nil disables
+	// it.
+	Header *HeaderConfig
+	// Normalize applies TrimSpace then EmptyAs to data rows after parsed-field
+	// admission; header normalization is separate.
+	Normalize NormalizationConfig
 }
 
 // DelimitedReader streams records from CSV or another delimited text format.
@@ -51,7 +69,9 @@ type DelimitedReader struct {
 	row           int
 }
 
-// NewCSVReader constructs a comma-delimited streaming reader.
+// NewCSVReader constructs a comma-delimited streaming reader without reading
+// source. It borrows source, copies mutable header configuration, and overrides
+// config.Delimiter. Character decoding/validation must be configured upstream.
 func NewCSVReader(source io.Reader, config DelimitedConfig) (*DelimitedReader, error) {
 	config.Delimiter = ','
 	reader, err := newDelimitedReader(source, config, "csv")
@@ -61,7 +81,9 @@ func NewCSVReader(source io.Reader, config DelimitedConfig) (*DelimitedReader, e
 	return reader, nil
 }
 
-// NewDelimitedReader constructs a streaming reader for an explicit delimiter.
+// NewDelimitedReader constructs a reader for an explicit delimiter without
+// reading or taking source ownership. Its grammar follows Go encoding/csv
+// (TABULAR-DEC-001), not strict RFC 4180 conformance. No encoding is inferred.
 func NewDelimitedReader(source io.Reader, config DelimitedConfig) (*DelimitedReader, error) {
 	return newDelimitedReader(source, config, "delimited")
 }
@@ -118,7 +140,9 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 }
 
 // Header returns the normalized first row when header handling is configured.
-// The returned row is a copy and is safe for the caller to modify.
+// The returned row is a copy and is safe for the caller to modify. Nil header
+// configuration consumes nothing and returns nil, nil. The first header/error
+// is cached, including a missing-header ErrorInvalidHeader wrapping io.EOF.
 func (reader *DelimitedReader) Header() (Row, error) {
 	if reader.headerConfig == nil {
 		return nil, nil
@@ -130,7 +154,10 @@ func (reader *DelimitedReader) Header() (Row, error) {
 	return append(Row(nil), reader.header...), nil
 }
 
-// Read returns the next normalized record. io.EOF marks a clean end of input.
+// Read returns an independently owned next record after configured header
+// consumption. io.EOF marks a clean end; parser/source errors discard partial
+// rows and retain their cause in a typed Error. Coordinates may be physical CSV
+// lines on syntax errors. Previously delivered rows are never rolled back.
 func (reader *DelimitedReader) Read() (Row, error) {
 	if reader.headerConfig != nil {
 		reader.readHeader()
@@ -221,6 +248,9 @@ func (reader *DelimitedReader) fieldLimitError(record []string, row int) error {
 	return nil
 }
 
+// This observer bounds bytes delivered to encoding/csv; it is not a replacement
+// grammar parser. Quote/delimiter/comment state must survive arbitrary source
+// chunk boundaries so multiline records cannot reset the budget prematurely.
 type delimitedRecordLimitReader struct {
 	source           io.Reader
 	maximum          int
@@ -255,6 +285,8 @@ func (reader *delimitedSourceLimitReader) Read(p []byte) (int, error) {
 	if reader.err != nil {
 		return 0, reader.err
 	}
+	// One probe byte distinguishes an exact-length EOF from an over-budget source;
+	// only the admitted prefix is returned and the excess becomes sticky.
 	if reader.remaining < int64(len(p)) {
 		p = p[:int(reader.remaining)+1]
 	}

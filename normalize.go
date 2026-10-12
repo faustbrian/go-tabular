@@ -2,13 +2,17 @@ package tabular
 
 import "strings"
 
-// Row is one tabular record. Fields retain source order.
+// Row is one tabular record whose fields retain source order. The slice is
+// mutable; copying a Row value aliases its array, while strings are immutable.
 type Row []string
 
 // NormalizationConfig describes explicit field-level data changes.
 type NormalizationConfig struct {
+	// TrimSpace removes leading/trailing Unicode whitespace before EmptyAs.
 	TrimSpace bool
-	EmptyAs   string
+	// EmptyAs replaces exactly empty values after optional trimming; empty
+	// disables replacement.
+	EmptyAs string
 }
 
 // HeaderCase controls header-name case conversion.
@@ -25,14 +29,26 @@ const (
 
 // HeaderConfig describes explicit header normalization and validation.
 type HeaderConfig struct {
-	TrimSpace        bool
-	Case             HeaderCase
-	Replace          map[string]string
-	RejectEmpty      bool
+	// TrimSpace trims Unicode whitespace after the first-field BOM removal.
+	TrimSpace bool
+	// Case selects Unicode case mapping before Replace; unknown values preserve
+	// casing.
+	Case HeaderCase
+	// Replace maps exact post-trim/post-case names to final names. Replacement
+	// values are not trimmed/cased again; direct calls must keep the map
+	// stable.
+	Replace map[string]string
+	// RejectEmpty rejects empty final names, after all transformations.
+	RejectEmpty bool
+	// RejectDuplicates rejects equal final names, including collisions caused
+	// by replacement.
 	RejectDuplicates bool
 }
 
-// NormalizeRow returns a copy of row with configured transformations applied.
+// NormalizeRow returns a new slice, trimming then replacing empty fields.
+// Unchanged immutable strings may share storage. Nil input yields an empty
+// allocated slice; no encoding validation, case folding or Unicode normalization
+// is performed.
 func NormalizeRow(row Row, config NormalizationConfig) Row {
 	normalized := make(Row, len(row))
 	for index, value := range row {
@@ -48,7 +64,10 @@ func NormalizeRow(row Row, config NormalizationConfig) Row {
 }
 
 // NormalizeHeader returns a normalized copy of header or a typed validation
-// error. A UTF-8 BOM is removed from the first field before other changes.
+// error. It removes a UTF-8 BOM from field one, then trims, changes case, applies
+// exact replacements and validates final names. A replacement is not normalized
+// again. It borrows config.Replace only during the call and returns no partial
+// header on validation failure.
 func NormalizeHeader(header Row, config HeaderConfig) (Row, error) {
 	normalized := make(Row, len(header))
 	seen := make(map[string]struct{}, len(header))

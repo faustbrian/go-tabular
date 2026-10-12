@@ -11,12 +11,15 @@
 //
 // The package never closes caller-provided sources. Delimited and fixed-width
 // readers retain their io.Reader, and ZIPArchive retains its io.ReaderAt.
-// OpenSpreadsheet consumes XLS input during construction; XLSX callers should
-// keep the source available until Close because presence-aware iteration
-// retains archive entry readers. Spreadsheet readers and readers returned by
+// OpenSpreadsheet consumes XLS input and captures a bounded owned XLSX source
+// snapshot during construction; the original source need not remain available
+// after successful construction. Spreadsheet readers and readers returned by
 // ZIPArchive.Open own internal resources that callers must close. The package
 // starts no goroutines, performs no retries, and has no hidden shutdown phase.
-// Stateful reader values are not safe for concurrent method calls.
+// Stateful reader values are not safe for concurrent method calls or copying
+// as independent cursors. Use constructors; zero reader values are not usable.
+// Delimited input does not validate its character encoding: wrap the source
+// with DecodeReader when validation or conversion is required.
 //
 // Parsing intentionally has no context parameter: operations synchronously
 // consume the supplied io.Reader or io.ReaderAt and perform no network I/O.

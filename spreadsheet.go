@@ -25,17 +25,35 @@ const (
 
 // SpreadsheetConfig controls workbook selection and row semantics.
 type SpreadsheetConfig struct {
-	Format              SpreadsheetFormat
-	Sheet               string
-	Header              *HeaderConfig
-	Normalize           NormalizationConfig
-	FieldsPerRecord     int
+	// Format must be FormatXLS or FormatXLSX; format is never inferred from
+	// source bytes or a filename.
+	Format SpreadsheetFormat
+	// Sheet selects an exact name; empty selects the first worksheet. XLS uses
+	// the first exact matching declaration.
+	Sheet string
+	// Header opts into first-row header consumption and cached normalization.
+	// Construction copies its value and replacement map.
+	Header *HeaderConfig
+	// Normalize transforms data values after row/field byte checks; headers use
+	// Header instead.
+	Normalize NormalizationConfig
+	// FieldsPerRecord is a nonnegative output width: short rows are padded,
+	// long rows fail. Zero learns a configured header's width; without a header
+	// it stays variable-width unless explicitly set.
+	FieldsPerRecord int
+	// AllowVariableFields disables width checks/padding even when
+	// FieldsPerRecord is set.
 	AllowVariableFields bool
-	PreserveCellErrors  bool
+	// PreserveCellErrors returns spreadsheet error strings instead of refusing
+	// a row. It does not evaluate formulas or infer display formatting.
+	PreserveCellErrors bool
 	// PreserveCellPresence enables ReadCells and its absent-versus-stored-empty
 	// distinction. Zero preserves the optimized string-only Read behavior.
 	PreserveCellPresence bool
-	MaxWorkbookBytes     int64
+	// MaxWorkbookBytes bounds the source size before construction; zero selects
+	// 64 MiB. XLS materialization and the XLSX owned snapshot/delegate may
+	// require more heap.
+	MaxWorkbookBytes int64
 	// MaxRecordBytes bounds one parsed worksheet row before normalization.
 	// Zero selects a finite 1 MiB default.
 	MaxRecordBytes int
@@ -50,7 +68,8 @@ type SpreadsheetConfig struct {
 	// Zero selects 1,000,000. Positive values override it. XLSX streams rows and
 	// does not use this XLS-specific budget.
 	MaxMaterializedCells int
-	ZIP                  ZIPConfig
+	// ZIP supplies XLSX archive limits/policy; XLS ignores this configuration.
+	ZIP ZIPConfig
 }
 
 // SpreadsheetCell is one immutable decoded worksheet cell.
@@ -64,15 +83,20 @@ func (cell SpreadsheetCell) Value() string {
 	return cell.value
 }
 
-// Present reports whether the workbook stored a cell at this position.
+// Present reports a supported stored BIFF cell record (XLS) or worksheet c
+// element (XLSX), not whether the value is nonempty. Unsupported ignored BIFF
+// record types are outside this ingestion presence model.
 func (cell SpreadsheetCell) Present() bool {
 	return cell.present
 }
 
-// SpreadsheetRow preserves workbook cell presence alongside decoded values.
+// SpreadsheetRow owns a mutable cell slice preserving ingestion presence and
+// decoded values. Copying the slice value aliases that array; cells are values.
 type SpreadsheetRow []SpreadsheetCell
 
-// SpreadsheetReader presents format-independent workbook rows.
+// SpreadsheetReader presents format-independent rows using a single mutable
+// cursor shared by Read and ReadCells. Obtain it from OpenSpreadsheet, serialize
+// all methods and call Close; its zero value is not usable.
 type SpreadsheetReader struct {
 	source           spreadsheetRowSource
 	index            int
@@ -101,6 +125,9 @@ type spreadsheetSourceRow struct {
 	presence []bool
 }
 
+// spreadsheetRowSource transfers a complete row or an error to the shared
+// cursor. Presence, when enabled, must match cells exactly; Close owns only the
+// adapter's resources, never the original caller source.
 type spreadsheetRowSource interface {
 	Read() (spreadsheetSourceRow, error)
 	Close() error
@@ -135,7 +162,12 @@ func (source *xlsRowSource) Read() (spreadsheetSourceRow, error) {
 
 func (*xlsRowSource) Close() error { return nil }
 
-// OpenSpreadsheet opens an explicitly configured XLS or XLSX workbook.
+// OpenSpreadsheet opens an explicitly configured XLS or XLSX workbook without
+// closing source. XLS is materialized and XLSX snapshots exactly size bytes
+// before admission/delegation; after success, the original source is no longer
+// needed; source must remain stable during construction. Limits do not cap total
+// parser heap. The returned reader owns internal
+// resources that require Close. No formulas, macros or display formats are run.
 func OpenSpreadsheet(source io.ReaderAt, size int64, config SpreadsheetConfig) (*SpreadsheetReader, error) {
 	if source == nil || size < 0 || config.FieldsPerRecord < 0 ||
 		config.MaxWorkbookBytes < 0 || config.MaxRecordBytes < 0 ||
@@ -208,7 +240,10 @@ func newSpreadsheetReader(source spreadsheetRowSource, config SpreadsheetConfig)
 	}
 }
 
-// Header returns a normalized copy of the configured first row.
+// Header returns a normalized copy of the configured first row, caching its
+// result or error. With no Header configuration it returns nil without reading.
+// It does not independently check closed state; cached results can remain
+// available after Close. A previously unread header still delegates to its source.
 func (reader *SpreadsheetReader) Header() (Row, error) {
 	if reader.headerConfig == nil {
 		return nil, nil
@@ -220,7 +255,11 @@ func (reader *SpreadsheetReader) Header() (Row, error) {
 	return append(Row(nil), reader.header...), nil
 }
 
-// Read returns the next worksheet row.
+// Read returns an owned worksheet row, consuming a configured header first.
+// io.EOF marks exhaustion; Read after Close returns io.ErrClosedPipe. Limits
+// validate decoded values before normalization; failures discard the current row.
+// Fixed width pads short rows and rejects long rows; without a header, zero
+// FieldsPerRecord does not infer a width from the first row.
 func (reader *SpreadsheetReader) Read() (Row, error) {
 	if reader.closed {
 		return nil, io.ErrClosedPipe
@@ -236,7 +275,9 @@ func (reader *SpreadsheetReader) Read() (Row, error) {
 
 // ReadCells returns the next worksheet row while preserving whether each cell
 // was stored or absent. Values follow the same normalization and error policy
-// as Read.
+// as Read. PreserveCellPresence must be enabled at construction. ReadCells and
+// Read share one cursor; changing methods does not restart iteration. Padding
+// creates absent cells, and a stored empty value can still be Present.
 func (reader *SpreadsheetReader) ReadCells() (SpreadsheetRow, error) {
 	if reader.closed {
 		return nil, io.ErrClosedPipe
@@ -401,7 +442,10 @@ func (reader *SpreadsheetReader) outputCellValue(
 	return cell.value
 }
 
-// Close releases iterator resources. It does not close the caller's source.
+// Close marks the reader closed and releases its internal iterator/workbook
+// resources, never the caller's source. Subsequent Close calls return nil even
+// if the first cleanup failed; cleanup is not retried. Read/ReadCells then return
+// io.ErrClosedPipe. Calls must be externally serialized.
 func (reader *SpreadsheetReader) Close() error {
 	if reader.closed {
 		return nil

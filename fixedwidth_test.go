@@ -192,6 +192,9 @@ func TestFixedWidthReaderReturnsEOFForEmptyInput(t *testing.T) {
 	}
 }
 
+// FuzzExtractBytes mutates arbitrary bytes and integer ranges. A successful
+// extraction must have the requested length; this is a range/aliasing primitive,
+// not a format or encoding validator.
 func FuzzExtractBytes(f *testing.F) {
 	f.Add([]byte("abcdef"), 1, 4)
 	f.Fuzz(func(t *testing.T, record []byte, start, end int) {
@@ -205,6 +208,9 @@ func FuzzExtractBytes(f *testing.F) {
 	})
 }
 
+// FuzzFixedWidthReader uses arbitrary bytes with a two-field layout, short-record
+// mode and a 4096-byte Scanner ceiling, traversing until an error without
+// requiring malformed inputs to be accepted.
 func FuzzFixedWidthReader(f *testing.F) {
 	f.Add([]byte("001Alice     Helsinki  \n"))
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -227,6 +233,9 @@ func FuzzFixedWidthReader(f *testing.F) {
 	})
 }
 
+// BenchmarkFixedWidthReader constructs and consumes 20000 UTF-8 records with
+// three byte ranges and per-field trim. Fixture setup precedes the loop but is
+// not removed by ResetTimer; it is not an isolated decoding-only measurement.
 func BenchmarkFixedWidthReader(b *testing.B) {
 	data := strings.Repeat("001Alice     Helsinki  \n", 20_000)
 	b.ReportAllocs()

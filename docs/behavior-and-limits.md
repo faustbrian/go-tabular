@@ -38,7 +38,9 @@ them. Record limits
 count the bytes presented to the parser, including delimiters and line endings.
 Quoted multiline fields remain part of one logical record. The reader stops
 the raw stream before the CSV parser can allocate past the configured record
-bound. Field limits count parsed UTF-8 bytes before optional normalization.
+bound. Field limits count parsed string bytes before optional normalization. Delimited
+parsing does not validate character encoding; use `DecodeReader` explicitly
+when UTF-8 validation or conversion is required.
 Both failures use `ErrorLimitExceeded`; row and field coordinates are one-based
 when available.
 

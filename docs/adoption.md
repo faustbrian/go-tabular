@@ -29,10 +29,10 @@ limits for untrusted input; finite zero-value defaults are the v2 source contrac
    `Error`. Default `Error.Error()` messages omit cause text and unknown metadata;
    explicit cause inspection through `Err`, `Unwrap`, or `errors.As` is trusted
    handling and can expose parser details or caller-provided entry names.
-7. Drain or close readers on every path. Keep delimited, fixed-width, ZIP, and
-   XLSX sources available while their readers consume them. XLS is fully
-   materialized during `OpenSpreadsheet`, so its source may close after that
-   call succeeds.
+7. Drain or close readers on every path. Keep delimited, fixed-width and ZIP
+   sources available while readers consume them. `OpenSpreadsheet` materializes
+   XLS and captures an owned XLSX snapshot during construction; its original
+   source may close after that call succeeds. Still close the spreadsheet reader.
 
 For ZIP-backed imports, call `OpenZIP`, select an exact entry from `Entries`,
 and pass the opened entry to a streaming text reader. XLS/XLSX require

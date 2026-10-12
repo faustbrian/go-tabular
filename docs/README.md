@@ -30,6 +30,8 @@ Use this index to select a tabular format and define safe ingest limits.
 
 ## Maintainers
 
+- [Source documentation audit](source-documentation-audit.md)
+
 - [Repository standards](repository-standards.md)
 - [Contributing](../CONTRIBUTING.md)
 - [Release history](../CHANGELOG.md)

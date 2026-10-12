@@ -33,6 +33,8 @@ const (
 	ErrorSpreadsheet ErrorKind = "spreadsheet error"
 )
 
+// Error returns the raw ErrorKind string; predefined constants are the stable
+// categories, while caller-created strings are not sanitized here.
 func (kind ErrorKind) Error() string {
 	return string(kind)
 }
@@ -41,14 +43,27 @@ func (kind ErrorKind) Error() string {
 // Row and Field are one-based when set. Default diagnostics omit cause text and
 // unknown metadata. Err and Unwrap retain the original cause for trusted inspection.
 type Error struct {
-	Kind   ErrorKind
-	Op     string
+	// Kind is the stable errors.Is category; unknown values render as generic
+	// error in Error().
+	Kind ErrorKind
+	// Op is operation metadata; Error() displays only recognized package-owned
+	// literals.
+	Op string
+	// Format is format metadata; Error() displays only recognized package-owned
+	// literals.
 	Format string
-	Row    int
-	Field  int
-	Err    error
+	// Row is a one-based record/worksheet coordinate when positive; CSV parse
+	// syntax errors can use physical line numbers.
+	Row int
+	// Field is a one-based field coordinate when positive.
+	Field int
+	// Err retains the original cause for trusted inspection. It may contain
+	// caller input, paths, parser data or arbitrary source/writer diagnostics.
+	Err error
 }
 
+// Error returns allowlisted diagnostic context and positive coordinates only.
+// This does not redact raw field inspection, generic encoding or Unwrap causes.
 func (err *Error) Error() string {
 	var context strings.Builder
 	context.WriteString("tabular")
@@ -96,6 +111,7 @@ func knownDiagnosticContext(value string) bool {
 	}
 }
 
+// Unwrap returns Err without sanitizing it for diagnostic or encoding use.
 func (err *Error) Unwrap() error {
 	return err.Err
 }

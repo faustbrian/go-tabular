@@ -17,6 +17,9 @@ type xlsxPresenceReader interface {
 	Close() error
 }
 
+// A single pending declared row fills skipped worksheet rows with absence flags
+// while keeping the XML cursor aligned with Excelize's row cursor. It owns the
+// opened entry reader and must be closed by the row adapter.
 type xlsxPresenceSource struct {
 	reader          io.ReadCloser
 	decoder         *xml.Decoder

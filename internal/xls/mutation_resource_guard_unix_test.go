@@ -16,6 +16,9 @@ const (
 	mutationTestWallLimit = 2 * time.Second
 )
 
+// TestMain activates guards only for the mutation coverage-profile environment.
+// The stop channel belongs to this wrapper; normal tests/examples run unchanged.
+// Abrupt budget exits are intentional campaign failures, not passing cleanup.
 func TestMain(testingMain *testing.M) {
 	coverageProfile := os.Getenv("GOLIB_GREMLINS_COVERAGE_PROFILE")
 	if coverageProfile == "" {

@@ -337,6 +337,9 @@ func TestZIPArchiveSurfacesDestinationWriteFailures(t *testing.T) {
 	}
 }
 
+// FuzzOpenZIP admits arbitrary ZIP bytes with ten members, 1024 bytes per
+// member and 2048 declared expanded bytes, then drains successful entries.
+// Its oracle is panic-safe bounded traversal, not archive authenticity.
 func FuzzOpenZIP(f *testing.F) {
 	seed := makeZIP(f, map[string]string{"data.csv": "a,b\n1,2\n"})
 	f.Add(seed)
@@ -363,6 +366,10 @@ func FuzzOpenZIP(f *testing.F) {
 	})
 }
 
+// BenchmarkZIPExtract repeatedly opens/drains one pre-indexed ZIP entry to
+// io.Discard, including CRC verification. Fixture/archive setup is before the
+// loop but not excluded by ResetTimer; its finite ratio override matches the
+// repetitive corpus, not a changed production admission policy.
 func BenchmarkZIPExtract(b *testing.B) {
 	data := makeZIP(b, map[string]string{"data.csv": strings.Repeat("1,Alice,Helsinki\n", 20_000)})
 	fixture, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))

@@ -79,6 +79,8 @@ func admitSheet(data []byte, offset int, remaining *int) (int, error) {
 				slots += row - maxRow
 				maxRow = row
 			}
+			// Charge an absent row even with zero width; otherwise sparse high indexes
+			// could allocate dense output while consuming no cell budget.
 			old := max(1, widths[row])
 			next := max(1, width)
 			if next > old {

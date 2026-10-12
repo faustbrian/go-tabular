@@ -24,7 +24,10 @@ const (
 	EncodingWindows1252 Encoding = "windows-1252"
 )
 
-// DecodeBytes validates and converts source bytes to UTF-8.
+// DecodeBytes converts source to an independent UTF-8 string. Empty encoding
+// selects strict UTF-8 validation; supported legacy single-byte tables are
+// mapped explicitly, without guessing. This convenience operation has no byte
+// budget; bound input before calling it.
 func DecodeBytes(source []byte, sourceEncoding Encoding) (string, error) {
 	if sourceEncoding == "" {
 		sourceEncoding = EncodingUTF8
@@ -44,7 +47,10 @@ func DecodeBytes(source []byte, sourceEncoding Encoding) (string, error) {
 	return string(converted), nil
 }
 
-// DecodeReader returns a streaming UTF-8 view of source.
+// DecodeReader returns a stateful streaming UTF-8 view of a nonnil borrowed
+// source. Empty encoding selects UTF-8. Unsupported encodings fail at setup;
+// malformed UTF-8 fails while reading, possibly after earlier valid output.
+// The wrapper does not close source, impose a total-byte cap or add cancellation.
 func DecodeReader(source io.Reader, sourceEncoding Encoding) (io.Reader, error) {
 	if source == nil {
 		return nil, &Error{Kind: ErrorInvalidEncoding, Op: "encoding.reader", Format: string(sourceEncoding)}

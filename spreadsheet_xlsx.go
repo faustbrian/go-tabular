@@ -20,6 +20,8 @@ type xlsxRowSource struct {
 	row      int
 }
 
+// Narrow delegate interfaces preserve failure/cleanup tests without promising
+// Excelize's entire API. The row adapter closes both iterator and workbook.
 type xlsxWorkbook interface {
 	GetCellType(string, string) (excelize.CellType, error)
 	Close() error
@@ -189,6 +191,8 @@ func (source *xlsxRowSource) Read() (spreadsheetSourceRow, error) {
 		return spreadsheetSourceRow{}, io.EOF
 	}
 	source.row++
+	// Raw values are not evaluated formulas or formatted display strings. A value
+	// beginning with # is ambiguous with ordinary text until its cell type is read.
 	values, err := source.rows.Columns(excelize.Options{RawCellValue: true})
 	if err != nil {
 		return spreadsheetSourceRow{}, err

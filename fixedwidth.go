@@ -12,20 +12,39 @@ const defaultMaxRecordBytes = 1024 * 1024
 // FixedWidthField identifies a half-open byte range [Start, End) in a source
 // record. Offsets apply before character decoding.
 type FixedWidthField struct {
-	Name      string
-	Start     int
-	End       int
+	// Name is a required nonempty output label; duplicate labels are not
+	// rejected.
+	Name string
+	// Start is a zero-based original-byte offset, before decoding; gaps are
+	// allowed.
+	Start int
+	// End is the exclusive original-byte end, greater than Start. Fields must
+	// be ordered and nonoverlapping.
+	End int
+	// TrimSpace trims the decoded field using strings.TrimSpace before row
+	// normalization.
 	TrimSpace bool
 }
 
 // FixedWidthConfig controls fixed-width record parsing.
 type FixedWidthConfig struct {
-	Fields              []FixedWidthField
-	Encoding            Encoding
-	AllowShortRecords   bool
+	// Fields defines a nonempty ordered layout; construction copies the slice.
+	Fields []FixedWidthField
+	// Encoding selects explicit field decoding; empty selects validated UTF-8.
+	Encoding Encoding
+	// AllowShortRecords clips fields to available bytes; wholly missing ranges
+	// decode as empty strings instead of failing record width.
+	AllowShortRecords bool
+	// RejectTrailingBytes rejects bytes beyond the final End; false ignores
+	// them.
 	RejectTrailingBytes bool
-	MaxRecordBytes      int
-	Normalize           NormalizationConfig
+	// MaxRecordBytes sets the Scanner buffer/token ceiling; zero selects 1 MiB
+	// and negative values fail. Line framing may need space beyond data bytes,
+	// so payload equality is not an inclusive admission promise.
+	MaxRecordBytes int
+	// Normalize transforms decoded fields after their individual TrimSpace
+	// options.
+	Normalize NormalizationConfig
 }
 
 // FixedWidthReader streams newline-delimited fixed-width records.
@@ -40,7 +59,10 @@ type FixedWidthReader struct {
 	row                 int
 }
 
-// NewFixedWidthReader validates a layout and constructs a streaming reader.
+// NewFixedWidthReader validates and copies a layout without reading source.
+// It retains but never closes source, scans newline records with ScanLines, and
+// decodes each selected byte range separately. A UTF-8 range splitting a rune
+// fails decoding rather than silently repairing the boundary.
 func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidthReader, error) {
 	if source == nil || len(config.Fields) == 0 || config.MaxRecordBytes < 0 {
 		return nil, &Error{Kind: ErrorInvalidLayout, Op: "fixedwidth.new", Format: "fixed-width"}
@@ -84,7 +106,7 @@ func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidth
 	}, nil
 }
 
-// Fields returns the configured field names in source order.
+// Fields returns an independent slice of configured names in source order.
 func (reader *FixedWidthReader) Fields() []string {
 	names := make([]string, len(reader.fields))
 	for index, field := range reader.fields {
@@ -93,7 +115,10 @@ func (reader *FixedWidthReader) Fields() []string {
 	return names
 }
 
-// Read returns the next decoded row. io.EOF marks a clean end of input.
+// Read returns an owned decoded/normalized row. io.EOF marks a clean end.
+// All Scanner failures, including source I/O errors, are classified as
+// ErrorLimitExceeded with the original cause; shape/decoding failures return
+// no partial row. The zero reader value is not usable.
 func (reader *FixedWidthReader) Read() (Row, error) {
 	if !reader.scanner.Scan() {
 		if err := reader.scanner.Err(); err != nil {
@@ -143,7 +168,9 @@ func (reader *FixedWidthReader) rowError(kind ErrorKind, field int, cause error)
 	}
 }
 
-// ExtractBytes returns the requested half-open byte range without copying it.
+// ExtractBytes returns a nonempty half-open byte range without copying. The
+// result aliases record and retains its backing array; mutations are shared.
+// Invalid or empty ranges return ErrorInvalidLayout; no decoding is performed.
 func ExtractBytes(record []byte, start, end int) ([]byte, error) {
 	if start < 0 || end <= start || end > len(record) {
 		return nil, &Error{Kind: ErrorInvalidLayout, Op: "fixedwidth.extract", Format: "fixed-width"}

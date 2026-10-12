@@ -7,6 +7,13 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Documentation
+
+- Clarify XLSX snapshot versus borrowed ZIP/text ownership, parser byte/slot
+  accounting, row/presence and error semantics, and Close behavior. Document
+  explicit encoding validation and aliasing without changing parsing, format
+  support, limits or the `/v2` API.
+
 ## [2.0.2] - 2026-10-10
 
 ### Security

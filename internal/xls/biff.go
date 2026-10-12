@@ -11,19 +11,31 @@ import (
 
 // Cell is a decoded BIFF cell value. Error is non-empty for Excel error cells.
 type Cell struct {
+	// Value is the decoded raw string (NUMBER/RK use float64 decimal rendering,
+	// not Excel styles or original lexical text).
 	Value string
+	// Error is nonempty for a supported Excel error record; Value is otherwise
+	// used.
 	Error string
 }
 
 // Sheet is one materialized BIFF worksheet.
 type Sheet struct {
-	Name     string
-	Rows     [][]Cell
+	// Name is the decoded BIFF sheet label in declaration order.
+	Name string
+	// Rows owns mutable dense row/cell slices, padded to each observed row
+	// width.
+	Rows [][]Cell
+	// Presence owns matching stored-cell flags when requested; nil disables
+	// presence tracking. Unsupported ignored record types are not counted as
+	// stored cells.
 	Presence [][]bool
 }
 
 // Workbook is a bounded, materialized BIFF8 workbook.
 type Workbook struct {
+	// Sheets owns the materialized worksheet slice in declaration order; caller
+	// mutations are not synchronized.
 	Sheets []Sheet
 }
 
@@ -52,7 +64,11 @@ func open(data []byte, preservePresence bool) (*Workbook, error) {
 	return OpenBounded(data, preservePresence, 0, 0)
 }
 
-// OpenBounded applies workbook-wide sheet and cell admission before decoding.
+// OpenBounded applies workbook-wide sheet/cell admission before dense decoding.
+// Zero bounds select 128 sheets and 1000000 charged cell slots; negatives fail
+// with ErrLimit. All sheets count, including unselected sheets and row gaps.
+// data must remain stable during parsing; returned mutable slices are owned.
+// This internal API has no independent compressed/source-byte limit.
 func OpenBounded(data []byte, preservePresence bool, maxSheets, maxCells int) (*Workbook, error) {
 	stream, err := openWorkbookStream(data)
 	if err != nil {
@@ -362,6 +378,9 @@ func setCell(rows map[int]map[int]Cell, widths map[int]int, row, column int, cel
 	widths[row] = max(widths[row], column+1)
 }
 
+// RK stores either a signed 30-bit integer or the high bits of an IEEE-754
+// value, with an optional divide-by-100 flag. Rendering keeps numeric value
+// semantics, not the workbook's styles, currency/date units or lexical spelling.
 func decodeRK(raw uint32) string {
 	scaled := raw&1 != 0
 	if raw&2 != 0 {
@@ -460,6 +479,9 @@ func parseSST(segments [][]byte) ([]string, error) {
 	return strings, nil
 }
 
+// SST CONTINUE starts a new width flag only within character data; raw rich-run
+// and extension bytes follow different framing. Characters must not be split
+// across segment boundaries without the format's continuation marker.
 func (reader *segmentedReader) readCharacters(count int, wide bool) (string, error) {
 	units := make([]uint16, count)
 	for index := 0; index < count; index++ {

@@ -21,6 +21,9 @@ const (
 	largeBenchmarkRows  = 100_000
 )
 
+// BenchmarkDelimitedReader50MiB excludes deterministic 100000-row fixture creation
+// via ResetTimer, then measures file open, construction, full read and close.
+// The input is at least 50 MiB; filesystem/cache state affects these I/O metrics.
 func BenchmarkDelimitedReader50MiB(b *testing.B) {
 	path, size := writeLargeCSVBenchmark(b)
 	b.Cleanup(func() { _ = os.Remove(path) })
@@ -56,6 +59,10 @@ func BenchmarkDelimitedReader50MiB(b *testing.B) {
 	b.ReportMetric(float64(largeBenchmarkRows*b.N)/elapsed.Seconds(), "rows/s")
 }
 
+// BenchmarkXLSXReader50MiB excludes 100000-row/12-column generated fixture
+// creation via ResetTimer, then times file open, full admission/row iteration
+// and both closes. Source/compressed bytes and row throughput are different
+// measures; do not compare these shapes as equivalent CSV/XLSX workloads.
 func BenchmarkXLSXReader50MiB(b *testing.B) {
 	path, size := writeLargeXLSXBenchmark(b)
 	b.Cleanup(func() { _ = os.Remove(path) })
@@ -180,6 +187,9 @@ func closeLargeBenchmarkFile(b *testing.B, file *os.File) (string, int64) {
 	return file.Name(), info.Size()
 }
 
+// largeBenchmarkField derives reproducible public high-variation bytes from row
+// coordinates, preventing a repeated filler string from dominating ZIP ratio.
+// This fixture hash is not secret material or a cryptographic generation claim.
 func largeBenchmarkField(row, column int) string {
 	var seed [16]byte
 	binary.LittleEndian.PutUint64(seed[:8], uint64(row))

@@ -376,6 +376,9 @@ func TestXLSXCloseStopsIteration(t *testing.T) {
 	}
 }
 
+// FuzzOpenSpreadsheet mutates OOXML packages with presence enabled, at most
+// 20 ZIP entries, 4096 declared bytes per member and 16384 total. Default source
+// and ratio bounds remain active; successful rows are traversed until an error.
 func FuzzOpenSpreadsheet(f *testing.F) {
 	data := makeErrorXLSX(f)
 	f.Add(data)
@@ -426,6 +429,9 @@ func FuzzOpenSpreadsheet(f *testing.F) {
 	})
 }
 
+// BenchmarkXLSXReader builds a 10000-row workbook before looping over full
+// snapshot/admission/delegate construction, row consumption and Close. No
+// ResetTimer excludes fixture construction; bytes/op is compressed source size.
 func BenchmarkXLSXReader(b *testing.B) {
 	workbook := excelize.NewFile()
 	sheet := workbook.GetSheetName(0)

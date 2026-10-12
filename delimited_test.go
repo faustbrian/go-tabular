@@ -704,6 +704,9 @@ func TestDelimitedReaderCanUseLazyQuotesExplicitly(t *testing.T) {
 	}
 }
 
+// FuzzDelimitedReader accepts only a one-rune delimiter and arbitrary source text.
+// Variable-width parsing uses finite default record/field/source budgets; it
+// traverses until any error, with panic safety rather than a validity oracle.
 func FuzzDelimitedReader(f *testing.F) {
 	f.Add(",", "a,b\n1,2\n")
 	f.Add(";", "name;city\nBjörk;Reykjavík\n")
@@ -728,6 +731,9 @@ func FuzzDelimitedReader(f *testing.F) {
 	})
 }
 
+// BenchmarkDelimitedReader reads 20000 three-field rows through construction and
+// iteration per operation. The repeated-string fixture is prepared before the
+// loop but no ResetTimer excludes that setup from the reported measurement.
 func BenchmarkDelimitedReader(b *testing.B) {
 	data := strings.Repeat("1,Alice,Helsinki\n", 20_000)
 	b.ReportAllocs()
@@ -743,6 +749,9 @@ func BenchmarkDelimitedReader(b *testing.B) {
 	}
 }
 
+// BenchmarkDelimitedReaderWithLimits uses the same 20000-row corpus with explicit
+// 1 MiB record/field budgets, also timing constructor and iteration. Fixture
+// preparation precedes the loop without ResetTimer, like the default track.
 func BenchmarkDelimitedReaderWithLimits(b *testing.B) {
 	data := strings.Repeat("1,Alice,Helsinki\n", 20_000)
 	b.ReportAllocs()
