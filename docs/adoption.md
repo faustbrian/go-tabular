@@ -7,7 +7,11 @@ Publication does not establish downstream adoption. The owned consumer
 boundaries requiring deliberate adoption are:
 
 - `go-filesystem/integration/tabular-ingestion`;
-- `go-library-tools/release/compatibility-consumer`.
+- `go-library-assurance/scenarios/compatibility-consumer`.
+
+The Assurance scenario is a non-releasable test harness consuming public
+releases, not a runtime dependency or a gate for ordinary Tabular releases.
+Immutable Tools fixtures retain their historical compatibility evidence.
 
 Their owners must update imports deliberately and verify
 the affected composition or release-compatibility boundary. Existing v1
