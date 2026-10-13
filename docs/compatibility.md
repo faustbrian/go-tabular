@@ -1,5 +1,7 @@
 # Versioning and releases
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 The project follows Semantic Versioning. Breaking public API changes require a
 new major release; patch releases preserve documented parsing behavior.
 row shape, normalization order, error categories, default limits, and
@@ -24,3 +26,6 @@ release publication.
 Breaking changes must describe the old and new row/error behavior and provide
 migration guidance. Security releases may omit exploit details until users
 have had reasonable time to update.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

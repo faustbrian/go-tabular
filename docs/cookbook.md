@@ -1,5 +1,7 @@
 # Scenario cookbook
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 ## Finnish decimal CSV
 
 Select `';'` as the delimiter. Values such as `12,50` remain strings; numeric
@@ -26,3 +28,6 @@ application data. The default rejects them with row and field coordinates.
 
 Use `Entries`; it returns a copy in original central-directory order. Open an
 exact name. Never concatenate entry names into destination filesystem paths.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

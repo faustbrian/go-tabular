@@ -1,5 +1,7 @@
 # Troubleshooting
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 ## `invalid configuration`
 
 Check nil sources, negative limits, unsupported spreadsheet formats, invalid
@@ -26,3 +28,6 @@ deliberate policy decision, not an automatic retry.
 Confirm the exact sheet, header consumption, raw-value expectation, field
 count, and cell-error policy. XLS formulas are not evaluated and formatting is
 not a value contract.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

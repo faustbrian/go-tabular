@@ -1,5 +1,7 @@
 # Adoption guide
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 ## V2 migration
 
 The public v2.0.0 module is available as `github.com/faustbrian/go-tabular/v2`.
@@ -46,3 +48,6 @@ with the existing importer before replacing it.
 Do not share one reader instance across goroutines. If cancellation is needed,
 use a source whose `Read` can be interrupted and stop consuming it from the
 owning goroutine; the codec API intentionally has no context parameter.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

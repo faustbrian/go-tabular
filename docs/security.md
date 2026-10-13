@@ -1,5 +1,7 @@
 # Security
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 ## Trust Boundary
 
 Treat files, archive metadata, workbook relationships, encodings, delimiters,
@@ -23,3 +25,6 @@ unexpected formats explicitly and avoid writing archive paths to disk.
 See the [threat model](threat-model.md) and
 [behavior and limits](behavior-and-limits.md). Report vulnerabilities through
 [SECURITY.md](../SECURITY.md).
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

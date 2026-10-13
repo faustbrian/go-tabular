@@ -1,5 +1,7 @@
 # Performance and memory verification
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 Benchmarks generate representative inputs before timing so the repository does
 not carry large derived fixtures. `go test ./... -run '^$' -bench . -benchmem`
 exercises:
@@ -56,3 +58,6 @@ limits appropriate to their environment.
 Opt-in XLSX cell-presence reads stream the selected worksheet XML a second time
 beside Excelize. The default `Read` path does not allocate per-cell presence
 metadata or perform ordinary-value cell-type lookups.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

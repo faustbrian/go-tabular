@@ -1,5 +1,7 @@
 # Quickstart
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 Install the published v2 module:
 
 ```sh
@@ -78,3 +80,6 @@ no goroutines and has no shutdown sequence beyond the documented `Close`
 methods. Parsing uses the frozen context-free codec exception: reads are
 synchronous, so cancellation and deadlines must be supplied by the source or
 the calling goroutine rather than a package context parameter.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

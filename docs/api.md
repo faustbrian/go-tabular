@@ -1,5 +1,7 @@
 # Public API reference
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 The authoritative signature documentation is available through
 `go doc github.com/faustbrian/go-tabular`. This page groups the surface by
 task and records compatibility-sensitive semantics.
@@ -94,3 +96,6 @@ inspection; do not expose inspected causes in public logs, traces, or responses.
   calls. The package starts no goroutines and exposes no channels or callbacks.
 - Parsing is synchronous and intentionally context-free. Cancellation and
   deadlines must be implemented by the source or caller.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

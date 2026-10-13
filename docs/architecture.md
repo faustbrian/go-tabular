@@ -1,5 +1,7 @@
 # Architecture
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 The public package owns configuration, stable errors, normalization, and the
 common row contract. Each parser translates its format into ordered `Row`
 values without schema inference.
@@ -54,3 +56,6 @@ Reader instances contain cursor and header state and are not safe for
 concurrent method calls. Independent readers may be used concurrently when
 their underlying sources permit it. Configuration values can be reused after
 construction because retained mutable fields are copied.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

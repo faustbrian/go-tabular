@@ -1,5 +1,7 @@
 # Migration notes
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 Public API adjustments follow Semantic Versioning and are recorded in the changelog.
 Pin a tagged version rather than `main`.
 
@@ -23,3 +25,6 @@ should continue to use a spreadsheet-specific API.
 When replacing another XLS library, validate real BIFF8 fixtures. The internal
 reader supports a documented subset and rejects unsupported or corrupt
 structures rather than attempting recovery.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

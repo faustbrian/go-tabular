@@ -1,5 +1,7 @@
 # Tabular security threat model
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 Version: 2 (2026-10-02), describing the v2 source contract. Public tags and
 releases establish actual publication and consumer adoption state.
 
@@ -58,3 +60,6 @@ caller-serialized and caller-provided sources retain ownership.
 No Critical or High residual source finding is accepted by this model. Any new
 parser, format, implicit I/O, background work, or security-sensitive diagnostic
 must update this model and add hostile-input evidence before release.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

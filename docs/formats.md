@@ -1,5 +1,7 @@
 # Supported-format matrix
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 | Capability | CSV/delimited | Fixed-width | XLS | XLSX | ZIP |
 | --- | --- | --- | --- | --- | --- |
 | Streaming records | Yes | Yes | No | Yes | N/A |
@@ -30,3 +32,6 @@ package contract.
 Quoting, escaped quotes, embedded delimiters, and quoted newlines follow Go's
 `encoding/csv`. Delimiters are single runes. Auto-detection and multi-character
 delimiters are intentionally unsupported.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

@@ -1,5 +1,7 @@
 # Releasing
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 The active root source uses v2. Do not create a v2 tag until every required
 producer release gate passes. Verify the actual public module before owned
 consumer adoption; do not substitute local source or `replace` directives for
@@ -34,3 +36,6 @@ GitHub release with its reviewed notes and artifacts. Verify the public tag,
 module proxy, checksum database, release assets, and package documentation
 before reporting the version as available. These steps are not automated by
 this repository today.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

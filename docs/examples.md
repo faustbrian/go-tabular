@@ -1,5 +1,7 @@
 # Executable examples
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 All supported examples are compiler-checked in
 [`example_test.go`](../example_test.go) and run during the documentation gate.
 They use the public package from `tabular_test`, so they exercise the same API
@@ -30,4 +32,7 @@ and closes one exact entry and passes it to a bounded delimited reader.
 selects a sheet, configures archive and parsed-value limits, validates the
 header, reads a row, and closes the spreadsheet reader. Presence-sensitive
 imports additionally set `PreserveCellPresence` and use `ReadCells` as
-described in [behavior and limits](behavior-and-limits.md#spreadsheet-limits).
+described in [behavior and limits](behavior-and-limits.md).
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

@@ -1,5 +1,7 @@
 # Behavior and limits
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 Zero-valued limits select safe defaults:
 
 | Limit | Default |
@@ -90,3 +92,6 @@ With a header configured, the first record is consumed once and never returned
 by `Read`. Without a header configuration, `Header` returns nil and consumes
 nothing. Fixed field counts reject long rows and pad short spreadsheet rows;
 variable mode preserves source width.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

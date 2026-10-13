@@ -1,5 +1,7 @@
 # FAQ
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 ## Why no auto-detection?
 
 Encoding and format guesses can silently reinterpret data. Source contracts
@@ -25,3 +27,6 @@ roadmap item; importing and exporting have different correctness contracts.
 
 No. Rows contain source-oriented strings. Schema conversion belongs to the
 application so locale and precision choices remain explicit.
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.

@@ -1,5 +1,7 @@
 # Specification decisions
 
+[Documentation index](README.md) · [Repository entry](../README.md)
+
 This register separates external format semantics, maintained production delegates,
 and repository-owned ingestion policy. RFC 4180 is informative; Go `encoding/csv`
 owns the delegated CSV grammar. Excelize owns delegated OOXML value decoding. The
@@ -57,3 +59,6 @@ Machine binding: `{"id":"TABULAR-DEC-008","title":"Spreadsheet packages fail clo
 Current security revision: Zero values select documented finite defaults; explicit positive limits continue to override defaults and failures retain stable error kinds. Workbook, compressed archive source, entry, expanded total, ratio, sheet, record, and field limits are independent and checked at their owning boundary. Executable default-boundary evidence is provided by `TestOpenZIPAppliesSafeDefaultSourceSizeLimit`, `TestOpenZIPAppliesSafeDefaultExpandedSizeLimit`, `TestOpenSpreadsheetAppliesWorkbookLimitBeforeXLSXParsing`, `TestXLSXReaderAppliesSafeDefaultSheetLimit`, `TestSpreadsheetReaderAppliesSafeDefaultFieldLimit`, and `TestSpreadsheetReaderAppliesSafeDefaultRecordLimit`.
 
 Primary authoritative source: [zip-source](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT).
+
+Choose the next guide in the [documentation index](README.md)
+or return to the [repository entry](../README.md) for installation and ownership.
