@@ -374,15 +374,22 @@ func TestRecordWidthsCopiesCallerSlice(t *testing.T) {
 
 // hasKnownGepositDelta reports the two accepted differences from Postal's
 // framing: a line ending in "\r\r", where Postal strips a carriage return
-// before encoding/csv strips another, and a line of 4,097 or 4,098 content
-// bytes, which only the library's one- or two-byte looser bound admits.
+// before encoding/csv strips another, and a row only the library's looser
+// bound admits. MaxRecordBytes counts the raw line with its "\n", so the
+// library admits 4,097 raw bytes before "\n" and 4,098 at end of input,
+// while Postal admits 4,096 bytes after stripping one carriage return. A
+// 4,097-byte row before "\r\n" exceeds both bounds and is not a delta.
 func hasKnownGepositDelta(source []byte) bool {
 	for _, line := range bytes.SplitAfter(source, []byte{'\n'}) {
-		content := bytes.TrimSuffix(line, []byte{'\n'})
-		if bytes.HasSuffix(content, []byte("\r\r")) {
+		raw, terminated := bytes.CutSuffix(line, []byte{'\n'})
+		if bytes.HasSuffix(raw, []byte("\r\r")) {
 			return true
 		}
-		if length := len(bytes.TrimSuffix(content, []byte{'\r'})); length > gepositRowBytes && length <= gepositRowBytes+2 {
+		libraryBound := gepositRowBytes + 2
+		if terminated {
+			libraryBound--
+		}
+		if len(raw) <= libraryBound && len(bytes.TrimSuffix(raw, []byte{'\r'})) > gepositRowBytes {
 			return true
 		}
 	}
@@ -423,12 +430,13 @@ func TestGepositRowBoundMatchesPostal(t *testing.T) {
 		{gepositRowBytes + 1, "", true},
 		{gepositRowBytes + 1, "\n", true},
 		{gepositRowBytes + 1, "\r\n", false},
+		{gepositRowBytes + 1, "\r", true},
 		{gepositRowBytes + 2, "", true},
 		{gepositRowBytes + 2, "\n", false},
 		{gepositRowBytes + 3, "", false},
 	} {
 		source := []byte(strings.Repeat("x", testCase.length) + testCase.ending)
-		if hasKnownGepositDelta(source) != (testCase.length > gepositRowBytes && testCase.length <= gepositRowBytes+2) {
+		if hasKnownGepositDelta(source) != testCase.delta {
 			t.Fatalf("%d bytes + %q: hasKnownGepositDelta disagrees with the documented delta", testCase.length, testCase.ending)
 		}
 		_, wantErr := gepositReference(source)
@@ -521,6 +529,10 @@ func TestRejectBlankLinesRecoversAfterEveryError(t *testing.T) {
 		"field count error": {
 			"a;b\nc\nd;e\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
 			[]Row{{"a", "b"}, {"d", "e"}}, []int{2},
+		},
+		"field count error on a multi-line record": {
+			"a;b\n\"x\ny\"\nc;d\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a", "b"}, {"c", "d"}}, []int{2},
 		},
 		"blank lines between records": {
 			"a\n\nb\nc\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},

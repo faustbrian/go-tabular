@@ -269,7 +269,10 @@ func (reader *DelimitedReader) readPositioned() *pendingRecord {
 	next := &pendingRecord{record: record, err: err}
 	var parseErr *csv.ParseError
 	switch {
-	case err == nil:
+	case err == nil || errors.Is(err, csv.ErrFieldCount):
+		// ErrFieldCount still returns the complete record, and its
+		// ParseError.Line is the record's first line, so the span comes from
+		// field positions as on success.
 		next.start, _ = reader.reader.FieldPos(0)
 		last := len(record) - 1
 		next.end, _ = reader.reader.FieldPos(last)
