@@ -21,7 +21,9 @@ consumers.
 ## Delimited text
 
 - `DelimitedConfig`: delimiter, comments, quote policy, row shape, header,
-  normalization, and explicit logical-record and field byte limits.
+  normalization, explicit logical-record and field byte limits, and optional
+  physical-line framing: `SingleLineRecords` rejects records spanning lines
+  and `RejectBlankLines` rejects empty lines, reported at that line.
 - Zero record and field limits select finite 1 MiB defaults; explicit positive
   values override them.
 - `NewCSVReader`: always selects comma, regardless of `Delimiter`.
@@ -30,9 +32,10 @@ consumers.
 
 ## Fixed-width text
 
-- `FixedWidthField`: named half-open byte interval `[Start, End)`.
-- `FixedWidthConfig`: layout, source encoding, short/trailing record policy,
-  maximum record size, and normalization.
+- `FixedWidthField`: named half-open byte interval `[Start, End)` with
+  optional `TrimSpace` or `TrimCutset` trimming.
+- `FixedWidthConfig`: layout, source encoding, short/trailing record policy or
+  an exact `RecordWidths` set, maximum record size, and normalization.
 - `NewFixedWidthReader`, `Fields`, and `Read`: validated streaming parser.
 - `ExtractBytes`: non-copying checked byte slice.
 

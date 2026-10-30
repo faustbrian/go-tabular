@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"slices"
 	"strings"
+	"unicode/utf8"
 )
 
 const defaultMaxRecordBytes = 1024 * 1024
@@ -24,6 +26,12 @@ type FixedWidthField struct {
 	// TrimSpace trims the decoded field using strings.TrimSpace before row
 	// normalization.
 	TrimSpace bool
+	// TrimCutset, when nonempty, trims every leading and trailing character in
+	// the set from the decoded field using strings.Trim before row
+	// normalization, for example " \t\n\r\x00\v" to also remove NUL padding.
+	// It must be valid UTF-8 and cannot be combined with TrimSpace; empty
+	// keeps the field untrimmed.
+	TrimCutset string
 }
 
 // FixedWidthConfig controls fixed-width record parsing.
@@ -38,6 +46,12 @@ type FixedWidthConfig struct {
 	// RejectTrailingBytes rejects bytes beyond the final End; false ignores
 	// them.
 	RejectTrailingBytes bool
+	// RecordWidths, when nonempty, is the exact set of admitted record byte
+	// lengths after line framing; any other length is a malformed row. Every
+	// width must be unique and at least the final End, and the option cannot
+	// be combined with AllowShortRecords or RejectTrailingBytes. Construction
+	// copies the slice; empty keeps the layout-width checks above.
+	RecordWidths []int
 	// MaxRecordBytes sets the Scanner buffer/token ceiling; zero selects 1 MiB
 	// and negative values fail. Line framing may need space beyond data bytes,
 	// so payload equality is not an inclusive admission promise.
@@ -54,6 +68,7 @@ type FixedWidthReader struct {
 	encoding            Encoding
 	allowShortRecords   bool
 	rejectTrailingBytes bool
+	recordWidths        []int
 	normalize           NormalizationConfig
 	recordWidth         int
 	row                 int
@@ -77,7 +92,8 @@ func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidth
 	fields := append([]FixedWidthField(nil), config.Fields...)
 	end := 0
 	for index, field := range fields {
-		if field.Name == "" || field.Start < 0 || field.End <= field.Start || field.Start < end {
+		if field.Name == "" || field.Start < 0 || field.End <= field.Start || field.Start < end ||
+			(field.TrimCutset != "" && (field.TrimSpace || !utf8.ValidString(field.TrimCutset))) {
 			return nil, &Error{
 				Kind:   ErrorInvalidLayout,
 				Op:     "fixedwidth.new",
@@ -86,6 +102,10 @@ func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidth
 			}
 		}
 		end = field.End
+	}
+	recordWidths, ok := admittedRecordWidths(config, end)
+	if !ok {
+		return nil, &Error{Kind: ErrorInvalidLayout, Op: "fixedwidth.new", Format: "fixed-width"}
 	}
 
 	maxRecordBytes := config.MaxRecordBytes
@@ -101,6 +121,7 @@ func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidth
 		encoding:            config.Encoding,
 		allowShortRecords:   config.AllowShortRecords,
 		rejectTrailingBytes: config.RejectTrailingBytes,
+		recordWidths:        recordWidths,
 		normalize:           config.Normalize,
 		recordWidth:         end,
 	}, nil
@@ -134,6 +155,9 @@ func (reader *FixedWidthReader) Read() (Row, error) {
 	}
 	reader.row++
 	record := reader.scanner.Bytes()
+	if len(reader.recordWidths) > 0 && !slices.Contains(reader.recordWidths, len(record)) {
+		return nil, reader.rowError(ErrorMalformedRow, 0, errors.New("record width is not admitted"))
+	}
 	if len(record) < reader.recordWidth && !reader.allowShortRecords {
 		return nil, reader.rowError(ErrorMalformedRow, 0, errors.New("record is shorter than layout"))
 	}
@@ -152,9 +176,30 @@ func (reader *FixedWidthReader) Read() (Row, error) {
 		if field.TrimSpace {
 			value = strings.TrimSpace(value)
 		}
+		if field.TrimCutset != "" {
+			value = strings.Trim(value, field.TrimCutset)
+		}
 		row[index] = value
 	}
 	return NormalizeRow(row, reader.normalize), nil
+}
+
+// admittedRecordWidths validates and copies RecordWidths against the layout.
+func admittedRecordWidths(config FixedWidthConfig, layoutEnd int) ([]int, bool) {
+	if len(config.RecordWidths) == 0 {
+		return nil, true
+	}
+	if config.AllowShortRecords || config.RejectTrailingBytes {
+		return nil, false
+	}
+	widths := make([]int, 0, len(config.RecordWidths))
+	for _, width := range config.RecordWidths {
+		if width < layoutEnd || slices.Contains(widths, width) {
+			return nil, false
+		}
+		widths = append(widths, width)
+	}
+	return widths, true
 }
 
 func (reader *FixedWidthReader) rowError(kind ErrorKind, field int, cause error) error {

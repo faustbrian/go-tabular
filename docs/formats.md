@@ -33,5 +33,11 @@ Quoting, escaped quotes, embedded delimiters, and quoted newlines follow Go's
 `encoding/csv`. Delimiters are single runes. Auto-detection and multi-character
 delimiters are intentionally unsupported.
 
+Line-oriented exports can opt into one physical line per record.
+`SingleLineRecords` rejects a quoted field that spans lines, and
+`RejectBlankLines` rejects empty lines that `encoding/csv` would skip, before,
+between or after records. Both report a malformed row at the physical line.
+Blank-line rejection cannot be combined with comments.
+
 Choose the next guide in the [documentation index](README.md)
 or return to the [repository entry](../README.md) for installation and ownership.

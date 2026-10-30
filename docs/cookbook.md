@@ -13,6 +13,37 @@ Wrap the source with `DecodeReader(source, EncodingWindows1252)` before
 constructing a delimited reader. Fixed-width readers accept the encoding in
 their own configuration.
 
+## One record per line
+
+For exports where every physical line is exactly one record, set
+`SingleLineRecords` and `RejectBlankLines`:
+
+```go
+reader, err := tabular.NewDelimitedReader(source, tabular.DelimitedConfig{
+	Delimiter:         ';',
+	SingleLineRecords: true,
+	RejectBlankLines:  true,
+})
+```
+
+A quoted field spanning lines or an empty line, including a trailing one, is
+then `ErrorMalformedRow` at that physical line.
+
+## Fixed-width records with several certified widths
+
+```go
+reader, err := tabular.NewFixedWidthReader(source, tabular.FixedWidthConfig{
+	Encoding:     tabular.EncodingISO88591,
+	RecordWidths: []int{176, 220},
+	Fields: []tabular.FixedWidthField{
+		{Name: "postal_code", Start: 13, End: 18, TrimCutset: " \t\n\r\x00\v"},
+	},
+})
+```
+
+Any other record length is a malformed row, and the cutset also removes NUL
+padding that `TrimSpace` would keep.
+
 ## Strict headers
 
 Use trimming, a consistent case, exact replacements, `RejectEmpty`, and

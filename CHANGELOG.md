@@ -15,6 +15,21 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `FixedWidthConfig.RecordWidths` admits an exact set of record byte lengths,
+  such as 176 or 220, and rejects every other length as a malformed row.
+- `FixedWidthField.TrimCutset` trims a caller-chosen character set from the
+  decoded field, including NUL and vertical-tab padding that `TrimSpace`
+  keeps.
+- `DelimitedConfig.SingleLineRecords` requires one physical line per record,
+  and `DelimitedConfig.RejectBlankLines` rejects empty lines instead of
+  skipping them; both report the physical line.
+
+All new fields default to their zero values, which keep 2.0.3 behavior.
+Unkeyed `FixedWidthField`, `FixedWidthConfig` and `DelimitedConfig` literals
+must become keyed literals.
+
 ### Documentation
 
 - Clarify XLSX snapshot versus borrowed ZIP/text ownership, parser byte/slot
