@@ -12,6 +12,7 @@ deterministically by benchmarks instead of storing bulky derived files.
 | XLS | `spreadsheet/table.xls` | `spreadsheet/malformed.xls` | real OLE2/BIFF8 workbook and invalid container rejection |
 | XLSX | `spreadsheet/sample.xlsx` | `spreadsheet/malformed.xlsx` | real OOXML workbook and invalid container rejection |
 | ZIP | `archive/import.zip` | `archive/broken.zip` | exact entry ingest and broken central-directory rejection |
+| Postal parity | `postal-parity/posti.dat`, `postal-parity/geposit.csv` | mutations built in `postal_parity_test.go` | exact record widths, NUL trimming, single-line records and blank-line rejection, copied from Mono's Postal parity fixtures |
 
 The `.base64` siblings preserve binary fixture provenance and make accidental
 binary changes reviewable. Tests consume the decoded binary files directly.

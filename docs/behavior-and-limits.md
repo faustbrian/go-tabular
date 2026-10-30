@@ -86,7 +86,11 @@ applies exact replacements, then validates empty and duplicate names.
 
 Fixed-width offsets refer to bytes in the original encoding. They must not
 split a multi-byte UTF-8 character. ISO-8859-1 and Windows-1252 map every byte;
-invalid UTF-8 is rejected instead of replaced.
+invalid UTF-8 is rejected instead of replaced. `RecordWidths` admits only the
+listed record lengths, each at least the layout end and at most
+`MaxRecordBytes` minus the two bytes of CRLF framing. `TrimCutset` trims the
+listed characters from the decoded field, for example NUL padding that
+`TrimSpace` keeps.
 
 With a header configured, the first record is consumed once and never returned
 by `Read`. Without a header configuration, `Header` returns nil and consumes

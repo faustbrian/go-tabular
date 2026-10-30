@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `FixedWidthConfig.RecordWidths` admits an exact set of record byte lengths,
+  such as 176 or 220, and rejects every other length as a malformed row.
+- `FixedWidthField.TrimCutset` trims a caller-chosen character set from the
+  decoded field, including NUL and vertical-tab padding that `TrimSpace`
+  keeps.
+- `DelimitedConfig.SingleLineRecords` requires one physical line per record,
+  and `DelimitedConfig.RejectBlankLines` rejects empty lines instead of
+  skipping them; both report the physical line. A run of blank lines is
+  reported once and reading continues. An unterminated quote still consumes
+  the rest of the input and is reported once; that read stays bounded by
+  the record and source limits and can surface as `ErrorLimitExceeded`.
+- Each `RecordWidths` entry must leave two bytes of `MaxRecordBytes` for
+  CRLF framing; a wider entry fails construction with `ErrorInvalidLayout`.
+- TABULAR-DEC-002 sha256:62aa3c91cf404c5799c1dd9fa5795c3ae374cd7ec2ea8c8dd47abca630bdbe7e
+
+All new fields default to their zero values, which keep 2.0.3 behavior.
+Unkeyed `FixedWidthField`, `FixedWidthConfig` and `DelimitedConfig` literals
+must become keyed literals.
+
+### Documentation
+
+- Clarify XLSX snapshot versus borrowed ZIP/text ownership, parser byte/slot
+  accounting, row/presence and error semantics, and Close behavior. Document
+  explicit encoding validation and aliasing. These clarifications change no
+  existing parsing, format support or limits.
+
 ## 2.0.3 - 2026-10-22
 
 ### Changed
@@ -12,15 +42,6 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Publish the current source and documentation with a fresh immutable tag.
 - Build with Go 1.27.3 to address GO-2026-6809 in `crypto/x509`.
   Consumers should use Go 1.27.3 or newer.
-
-## [Unreleased]
-
-### Documentation
-
-- Clarify XLSX snapshot versus borrowed ZIP/text ownership, parser byte/slot
-  accounting, row/presence and error semantics, and Close behavior. Document
-  explicit encoding validation and aliasing without changing parsing, format
-  support, limits or the `/v2` API.
 
 ## [2.0.2] - 2026-10-10
 
@@ -289,7 +310,7 @@ consumers retain their published behavior without local `replace` directives.
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v2.0.3...HEAD
 [2.0.1]: https://github.com/faustbrian/go-tabular/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v2.0.0
 [1.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v1.0.0

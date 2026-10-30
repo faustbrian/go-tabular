@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -54,6 +55,15 @@ type DelimitedConfig struct {
 	// Normalize applies TrimSpace then EmptyAs to data rows after parsed-field
 	// admission; header normalization is separate.
 	Normalize NormalizationConfig
+	// SingleLineRecords requires every record, including a configured header,
+	// to occupy exactly one physical line: a quoted field containing a line
+	// break is a malformed row. False keeps encoding/csv's multiline fields.
+	SingleLineRecords bool
+	// RejectBlankLines makes an empty physical line before, between or after
+	// records a malformed row reported at that line, instead of encoding/csv's
+	// silent skip. Line breaks inside quoted fields are field content. It
+	// cannot be combined with Comment, whose skipped lines are indistinguishable.
+	RejectBlankLines bool
 }
 
 // DelimitedReader streams records from CSV or another delimited text format.
@@ -67,6 +77,22 @@ type DelimitedReader struct {
 	normalize     NormalizationConfig
 	maxFieldBytes int
 	row           int
+	singleLine    bool
+	rejectBlank   bool
+	source        *delimitedSourceLimitReader
+	// lastLine is the last physical line already returned or reported.
+	lastLine int
+	// pending holds a parsed record or error withheld while the blank lines
+	// before it are reported.
+	pending *pendingRecord
+}
+
+// pendingRecord is one encoding/csv result with the physical lines it spans.
+type pendingRecord struct {
+	record []string
+	err    error
+	start  int
+	end    int
 }
 
 // NewCSVReader constructs a comma-delimited streaming reader without reading
@@ -92,7 +118,8 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 	if source == nil || !validDelimiter(config.Delimiter) ||
 		(config.Comment != 0 && (!validDelimiter(config.Comment) || config.Comment == config.Delimiter)) ||
 		config.FieldsPerRecord < 0 || config.MaxRecordBytes < 0 ||
-		config.MaxFieldBytes < 0 || config.MaxSourceBytes < 0 {
+		config.MaxFieldBytes < 0 || config.MaxSourceBytes < 0 ||
+		(config.RejectBlankLines && config.Comment != 0) {
 		return nil, &Error{Kind: ErrorInvalidConfig, Op: "delimited.new", Format: format}
 	}
 
@@ -108,8 +135,11 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 	if maxSourceBytes == 0 {
 		maxSourceBytes = defaultMaxDelimitedSourceBytes
 	}
+	sourceLimit := &delimitedSourceLimitReader{
+		source: source, remaining: maxSourceBytes, countLines: config.RejectBlankLines,
+	}
 	parserSource := &delimitedRecordLimitReader{
-		source:       &delimitedSourceLimitReader{source: source, remaining: maxSourceBytes},
+		source:       sourceLimit,
 		maximum:      maxRecordBytes,
 		trimLeading:  config.TrimLeadingSpace,
 		delimiter:    []byte(string(config.Delimiter)),
@@ -136,6 +166,9 @@ func newDelimitedReader(source io.Reader, config DelimitedConfig, format string)
 		headerConfig:  cloneHeaderConfig(config.Header),
 		normalize:     config.Normalize,
 		maxFieldBytes: maxFieldBytes,
+		singleLine:    config.SingleLineRecords,
+		rejectBlank:   config.RejectBlankLines,
+		source:        sourceLimit,
 	}, nil
 }
 
@@ -200,7 +233,63 @@ func (reader *DelimitedReader) readHeader() {
 }
 
 func (reader *DelimitedReader) readRecord() (Row, error) {
+	if !reader.singleLine && !reader.rejectBlank {
+		record, err := reader.reader.Read()
+		return reader.admit(record, err)
+	}
+	next := reader.pending
+	if next == nil {
+		next = reader.readPositioned()
+	}
+	// Blank lines are reported once per run, at the run's first line; the
+	// record after them is withheld and returned by the next Read.
+	if reader.rejectBlank && next.start > reader.lastLine+1 {
+		reader.pending = next
+		blank := reader.lastLine + 1
+		reader.lastLine = next.start - 1
+		return nil, reader.malformedLine(blank, errors.New("blank line"))
+	}
+	reader.pending = nil
+	if errors.Is(next.err, io.EOF) {
+		return nil, io.EOF
+	}
+	reader.lastLine = next.end
+	if next.err == nil && reader.singleLine && next.end != next.start {
+		reader.row++
+		return nil, reader.malformedLine(next.start, errors.New("record spans lines"))
+	}
+	return reader.admit(next.record, next.err)
+}
+
+// readPositioned reads one encoding/csv result with the physical lines it
+// consumed. At the end of input the remaining lines are blank, so EOF is
+// positioned after them.
+func (reader *DelimitedReader) readPositioned() *pendingRecord {
 	record, err := reader.reader.Read()
+	next := &pendingRecord{record: record, err: err}
+	var parseErr *csv.ParseError
+	switch {
+	case err == nil || errors.Is(err, csv.ErrFieldCount):
+		// ErrFieldCount still returns the complete record, and its
+		// ParseError.Line is the record's first line, so the span comes from
+		// field positions as on success.
+		next.start, _ = reader.reader.FieldPos(0)
+		last := len(record) - 1
+		next.end, _ = reader.reader.FieldPos(last)
+		next.end += strings.Count(record[last], "\n")
+	case errors.Is(err, io.EOF):
+		next.start = reader.source.lines() + 1
+		next.end = next.start - 1
+	case errors.As(err, &parseErr):
+		next.start, next.end = parseErr.StartLine, parseErr.Line
+	default:
+		next.start, next.end = reader.lastLine+1, reader.lastLine+1
+	}
+	return next
+}
+
+// admit classifies one encoding/csv result as the reader's row or error.
+func (reader *DelimitedReader) admit(record []string, err error) (Row, error) {
 	if err == nil {
 		reader.row++
 		if limitErr := reader.fieldLimitError(record, reader.row); limitErr != nil {
@@ -231,6 +320,10 @@ func (reader *DelimitedReader) readRecord() (Row, error) {
 		Row:    row,
 		Err:    err,
 	}
+}
+
+func (reader *DelimitedReader) malformedLine(line int, cause error) error {
+	return &Error{Kind: ErrorMalformedRow, Op: "delimited.read", Format: reader.format, Row: line, Err: cause}
 }
 
 func (reader *DelimitedReader) fieldLimitError(record []string, row int) error {
@@ -276,6 +369,29 @@ type delimitedSourceLimitReader struct {
 	source    io.Reader
 	remaining int64
 	err       error
+	// countLines enables newlines and lastByte for blank-line rejection.
+	countLines bool
+	newlines   int
+	lastByte   byte
+	sawBytes   bool
+}
+
+// lines returns the physical lines delivered so far; a final line without a
+// line break still counts.
+func (reader *delimitedSourceLimitReader) lines() int {
+	if reader.sawBytes && reader.lastByte != '\n' {
+		return reader.newlines + 1
+	}
+	return reader.newlines
+}
+
+func (reader *delimitedSourceLimitReader) count(values []byte) {
+	if !reader.countLines || len(values) == 0 {
+		return
+	}
+	reader.newlines += bytes.Count(values, []byte{'\n'})
+	reader.lastByte = values[len(values)-1]
+	reader.sawBytes = true
 }
 
 func (reader *delimitedSourceLimitReader) Read(p []byte) (int, error) {
@@ -295,9 +411,11 @@ func (reader *delimitedSourceLimitReader) Read(p []byte) (int, error) {
 		n = int(reader.remaining)
 		reader.remaining = 0
 		reader.err = errDelimitedSourceLimit
+		reader.count(p[:n])
 		return n, reader.err
 	}
 	reader.remaining -= int64(n)
+	reader.count(p[:n])
 	return n, err
 }
 

@@ -1,0 +1,11 @@
+Postalcode;Municipality_area;Parish_code;Locality;Streetname;Number_from;Number_to;Letter_from;Letter_to
+100 00;Stockholm;S;Central;;;;;
+12345;Stockholm;S;Central;Main Street;1;2;A;B
+12346;Stockholm;S;Central;Bare Street;0;0;;
+12347;Stockholm;S;Central;Single Number;7;0;;
+12348;Stockholm;S;Central;One Bound;8;8;C;
+12349;Stockholm;S;Central;Other Bound;9;9;;D
+12350;Stockholm;S;Central;Reverse Numbers;3;2;;
+12351;Stockholm;S;Central;Reverse Letters;4;4;C;A
+12352;Stockholm;S;Central;Nordic Letters;5;5;ä;b
+12353;Stockholm;S;Central;BOX;6;6;;
