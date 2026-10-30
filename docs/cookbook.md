@@ -27,7 +27,15 @@ reader, err := tabular.NewDelimitedReader(source, tabular.DelimitedConfig{
 ```
 
 A quoted field spanning lines or an empty line, including a trailing one, is
-then `ErrorMalformedRow` at that physical line.
+then `ErrorMalformedRow` at that physical line. A run of blank lines is
+reported once, at its first line, and reading continues with the next record.
+
+These options frame lines; they do not change the parser. A quote that is
+never closed still consumes the rest of the input as one field, so it is
+reported once, at the line where the input ends, and the lines it swallowed
+are not returned. That read stays bounded by `MaxRecordBytes` and
+`MaxSourceBytes`, so a long unterminated quote surfaces as
+`ErrorLimitExceeded`, which is sticky, instead of `ErrorMalformedRow`.
 
 ## Fixed-width records with several certified widths
 
@@ -42,7 +50,8 @@ reader, err := tabular.NewFixedWidthReader(source, tabular.FixedWidthConfig{
 ```
 
 Any other record length is a malformed row, and the cutset also removes NUL
-padding that `TrimSpace` would keep.
+padding that `TrimSpace` would keep. Each width must leave two bytes of
+`MaxRecordBytes` for CRLF framing, or construction fails.
 
 ## Strict headers
 

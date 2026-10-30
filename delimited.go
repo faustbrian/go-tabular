@@ -80,8 +80,19 @@ type DelimitedReader struct {
 	singleLine    bool
 	rejectBlank   bool
 	source        *delimitedSourceLimitReader
-	// lastLine is the physical line on which the previous record ended.
+	// lastLine is the last physical line already returned or reported.
 	lastLine int
+	// pending holds a parsed record or error withheld while the blank lines
+	// before it are reported.
+	pending *pendingRecord
+}
+
+// pendingRecord is one encoding/csv result with the physical lines it spans.
+type pendingRecord struct {
+	record []string
+	err    error
+	start  int
+	end    int
 }
 
 // NewCSVReader constructs a comma-delimited streaming reader without reading
@@ -222,21 +233,68 @@ func (reader *DelimitedReader) readHeader() {
 }
 
 func (reader *DelimitedReader) readRecord() (Row, error) {
+	if !reader.singleLine && !reader.rejectBlank {
+		record, err := reader.reader.Read()
+		return reader.admit(record, err)
+	}
+	next := reader.pending
+	if next == nil {
+		next = reader.readPositioned()
+	}
+	// Blank lines are reported once per run, at the run's first line; the
+	// record after them is withheld and returned by the next Read.
+	if reader.rejectBlank && next.start > reader.lastLine+1 {
+		reader.pending = next
+		blank := reader.lastLine + 1
+		reader.lastLine = next.start - 1
+		return nil, reader.malformedLine(blank, errors.New("blank line"))
+	}
+	reader.pending = nil
+	if errors.Is(next.err, io.EOF) {
+		return nil, io.EOF
+	}
+	reader.lastLine = next.end
+	if next.err == nil && reader.singleLine && next.end != next.start {
+		reader.row++
+		return nil, reader.malformedLine(next.start, errors.New("record spans lines"))
+	}
+	return reader.admit(next.record, next.err)
+}
+
+// readPositioned reads one encoding/csv result with the physical lines it
+// consumed. At the end of input the remaining lines are blank, so EOF is
+// positioned after them.
+func (reader *DelimitedReader) readPositioned() *pendingRecord {
 	record, err := reader.reader.Read()
+	next := &pendingRecord{record: record, err: err}
+	var parseErr *csv.ParseError
+	switch {
+	case err == nil:
+		next.start, _ = reader.reader.FieldPos(0)
+		last := len(record) - 1
+		next.end, _ = reader.reader.FieldPos(last)
+		next.end += strings.Count(record[last], "\n")
+	case errors.Is(err, io.EOF):
+		next.start = reader.source.lines() + 1
+		next.end = next.start - 1
+	case errors.As(err, &parseErr):
+		next.start, next.end = parseErr.StartLine, parseErr.Line
+	default:
+		next.start, next.end = reader.lastLine+1, reader.lastLine+1
+	}
+	return next
+}
+
+// admit classifies one encoding/csv result as the reader's row or error.
+func (reader *DelimitedReader) admit(record []string, err error) (Row, error) {
 	if err == nil {
 		reader.row++
 		if limitErr := reader.fieldLimitError(record, reader.row); limitErr != nil {
 			return nil, limitErr
 		}
-		if lineErr := reader.lineError(record); lineErr != nil {
-			return nil, lineErr
-		}
 		return Row(record), nil
 	}
 	if errors.Is(err, io.EOF) {
-		if reader.rejectBlank && reader.source.lines() > reader.lastLine {
-			return nil, reader.malformedLine(reader.lastLine+1, errors.New("blank line"))
-		}
 		return nil, io.EOF
 	}
 
@@ -259,26 +317,6 @@ func (reader *DelimitedReader) readRecord() (Row, error) {
 		Row:    row,
 		Err:    err,
 	}
-}
-
-// lineError applies the physical-line options to a parsed record. A record
-// ends on its last field's starting line plus the line breaks inside it.
-func (reader *DelimitedReader) lineError(record []string) error {
-	if !reader.singleLine && !reader.rejectBlank {
-		return nil
-	}
-	start, _ := reader.reader.FieldPos(0)
-	if reader.rejectBlank && start != reader.lastLine+1 {
-		return reader.malformedLine(reader.lastLine+1, errors.New("blank line"))
-	}
-	last := len(record) - 1
-	end, _ := reader.reader.FieldPos(last)
-	end += strings.Count(record[last], "\n")
-	if reader.singleLine && end != start {
-		return reader.malformedLine(start, errors.New("record spans lines"))
-	}
-	reader.lastLine = end
-	return nil
 }
 
 func (reader *DelimitedReader) malformedLine(line int, cause error) error {

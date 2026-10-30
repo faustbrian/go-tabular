@@ -113,8 +113,9 @@ rewritten and no online authority refresh is claimed.
 
 ## Variants, fixtures and assurance
 
-No tracked generated Go source or go:generate operation exists. Four pinned
-fixture hashes match the committed manifest; base64 companions and fixture
+No tracked generated Go source or go:generate operation exists. Six pinned
+fixture hashes match the committed manifest, including the two Postal parity
+fixtures copied byte for byte from Mono at the recorded revision; base64 companions and fixture
 origin/license records remain unchanged. Test-only helpers construct synthetic
 BIFF/ZIP/XML packages in memory; the largebench producer creates disposable
 CSV/XLSX files under b.TempDir, not distributed generated source.
@@ -124,8 +125,8 @@ mutation-resource guards use an OS expression. Those guards only activate for
 GOLIB_GREMLINS_COVERAGE_PROFILE, serializing profile access and enforcing heap/
 wall ceilings with an explicit stop signal. Ordinary examples do not activate
 that campaign. Directives and existing narrow security suppressions stay exact.
-Six root fuzz targets cover delimited parsing, extraction, fixed-width, ZIP,
-XLS and XLSX; comments state actual byte/config boundaries and panic/error/
+Eight root fuzz targets cover delimited parsing, extraction, fixed-width, ZIP,
+XLS, XLSX and Postal's Posti and Geposit framing differentials; comments state actual byte/config boundaries and panic/error/
 traversal oracles, not full validity/conformance. Six ordinary benchmarks plus
 two largebench tracks have different construction/setup and compressed-versus-
 expanded byte measures; no speed or fixed-memory guarantee is inferred. Four
@@ -171,6 +172,7 @@ No saved active-fuzz crash corpus or unfinished implementation marker was found.
 | `mutation_resource_guard_unix_test.go` | Conditional Unix mutation guard lifetime and ownership |
 | `normalize.go` | Ordered transformations, copied row/map boundaries and post-transform validation |
 | `normalize_test.go` | Ordered trim/case/replacement and duplicate/empty-name policy |
+| `postal_parity_test.go` | Record widths, cutsets and line-record options against Postal's reference parsers, recovery and fuzz differentials |
 | `reader_delegate_contract_test.go` | Delegate failures, shared cursor and cleanup contracts |
 | `spreadsheet.go` | Common cursor, padding, error/presence policy, limits and Close |
 | `spreadsheet_xls_test.go` | Real XLS fixture, selection/presence, finite materialization, fuzz and padded benchmark |
@@ -186,7 +188,7 @@ No saved active-fuzz crash corpus or unfinished implementation marker was found.
 
 ## Disposition
 
-All 47 tracked Go files (14 production, 33 assurance), 122 public members,
+All 48 tracked Go files (14 production, 34 assurance), 126 public members,
 13 internal-exported members and 10 exported methods on private adapters are
 audited. This includes types, named fields, functions, methods and constants;
 private interfaces and their method contracts were inspected separately.

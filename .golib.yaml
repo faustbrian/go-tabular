@@ -71,6 +71,16 @@ operations:
         fuzz: '^FuzzOpenSpreadsheet$'
         budget: 10000x
         timeout: 20m
+      - type: go-test
+        packages: ["."]
+        fuzz: '^FuzzPostalLineRecords$'
+        budget: 10000x
+        timeout: 20m
+      - type: go-test
+        packages: ["."]
+        fuzz: '^FuzzPostalFixedWidth$'
+        budget: 10000x
+        timeout: 20m
   - module: .
     gate: benchmark
     steps:

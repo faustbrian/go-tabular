@@ -18,6 +18,8 @@
     {"id":"millken-xls-table","source":"https://github.com/millken/xls/blob/c5f78026ef7fc3e270301ec14176e1b635fdbcbd/testdata/table.xls","revision":"c5f78026ef7fc3e270301ec14176e1b635fdbcbd","path":"testdata/spreadsheet/table.xls","sha256":"73ab13e7a2874023c2f3cde09eb9ec6f0e4e4c195c1c76156dc91f1633116a3e"},
     {"id":"owned-xlsx-sample","source":"repository fixture","path":"testdata/spreadsheet/sample.xlsx","sha256":"7674793c1dac855989763e4fc04975b3a890eac3f91a7452d0dae7ee5e691d3b"},
     {"id":"owned-csv-realistic","source":"repository fixture","path":"testdata/delimited/realistic.csv","sha256":"999bbf2799de69ee8fdbe5f6ec4c29c1b059328fc9423c61deadacf981586c58"},
-    {"id":"owned-csv-semicolon","source":"repository fixture","path":"testdata/delimited/semicolon.csv","sha256":"59ff1c42e6914b66632055a55620e7e9edf8c971331d15263b8e65d42fc7ea93"}
+    {"id":"owned-csv-semicolon","source":"repository fixture","path":"testdata/delimited/semicolon.csv","sha256":"59ff1c42e6914b66632055a55620e7e9edf8c971331d15263b8e65d42fc7ea93"},
+    {"id":"mono-postal-posti","source":"faustbrian/mono apps/postal/testdata/parity/providers/posti.dat","revision":"275c8d49c2d4cb682bc08bfce62f80b3e46d8f59","path":"testdata/postal-parity/posti.dat","sha256":"349639b1dcbd65ffda3e9e509d977839965bb339fd2b4002e7f4894b71b2606c"},
+    {"id":"mono-postal-geposit","source":"faustbrian/mono apps/postal/testdata/parity/providers/geposit.csv","revision":"275c8d49c2d4cb682bc08bfce62f80b3e46d8f59","path":"testdata/postal-parity/geposit.csv","sha256":"099ca414ef18fe4366ce119d6ca1703fab7f64c8d479464afe3ab651123f3aff"}
   ]
 }

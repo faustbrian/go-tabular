@@ -77,12 +77,16 @@ func postiLibrary(source []byte) ([]Row, error) {
 
 // gepositReference mirrors Postal's geposit.Decode framing: every physical
 // line is exactly one semicolon record, so blank lines and quoted fields that
-// span lines are malformed.
+// span lines are malformed, and a line is read through a 4,098-byte buffer
+// and refused above 4,096 bytes once its line break is removed.
 func gepositReference(source []byte) ([]Row, error) {
-	reader := bufio.NewReader(bytes.NewReader(source))
+	reader := bufio.NewReaderSize(bytes.NewReader(source), gepositRowBytes+2)
 	var rows []Row
 	for {
 		line, err := reader.ReadSlice('\n')
+		if errors.Is(err, bufio.ErrBufferFull) {
+			return rows, errors.New("row exceeds its byte limit")
+		}
 		if len(line) == 0 && errors.Is(err, io.EOF) {
 			return rows, nil
 		}
@@ -90,6 +94,9 @@ func gepositReference(source []byte) ([]Row, error) {
 			return rows, err
 		}
 		line = bytes.TrimSuffix(bytes.TrimSuffix(line, []byte{'\n'}), []byte{'\r'})
+		if len(line) > gepositRowBytes {
+			return rows, errors.New("row exceeds its byte limit")
+		}
 		if !utf8.Valid(line) {
 			return rows, errors.New("invalid UTF-8")
 		}
@@ -110,9 +117,19 @@ func gepositReference(source []byte) ([]Row, error) {
 	}
 }
 
+// Postal's Geposit row and source bounds. The library's record bound counts
+// the line break, so MaxRecordBytes 4098 admits up to 4,097 content bytes
+// before LF and 4,098 before end of input, one and two more than Postal's
+// 4,096. That looseness in a safety bound is accepted.
+const (
+	gepositRowBytes    = 4096
+	gepositSourceBytes = 256 << 20
+)
+
 func gepositLibrary(source []byte) ([]Row, error) {
 	reader, err := NewDelimitedReader(bytes.NewReader(source), DelimitedConfig{
 		Delimiter: ';', AllowVariableFields: true, SingleLineRecords: true, RejectBlankLines: true,
+		MaxRecordBytes: gepositRowBytes + 2, MaxSourceBytes: gepositSourceBytes,
 	})
 	if err != nil {
 		return nil, err
@@ -300,7 +317,9 @@ func TestNewOptionsRejectContradictoryConfiguration(t *testing.T) {
 		"cutset and trim space": {Fields: []FixedWidthField{{
 			Name: "a", Start: 0, End: 4, TrimSpace: true, TrimCutset: " ",
 		}}},
-		"cutset not UTF-8": {Fields: []FixedWidthField{{Name: "a", Start: 0, End: 4, TrimCutset: "\xff"}}},
+		"cutset not UTF-8":           {Fields: []FixedWidthField{{Name: "a", Start: 0, End: 4, TrimCutset: "\xff"}}},
+		"width beyond record bound":  {Fields: field, RecordWidths: []int{4, 7}, MaxRecordBytes: 8},
+		"width beyond default bound": {Fields: field, RecordWidths: []int{1<<20 - 1}},
 	} {
 		if _, err := NewFixedWidthReader(strings.NewReader(""), config); !errors.Is(err, ErrorInvalidLayout) {
 			t.Fatalf("%s: NewFixedWidthReader() error = %v, want invalid layout", name, err)
@@ -310,6 +329,27 @@ func TestNewOptionsRejectContradictoryConfiguration(t *testing.T) {
 		Delimiter: ';', Comment: '#', RejectBlankLines: true,
 	}); !errors.Is(err, ErrorInvalidConfig) {
 		t.Fatalf("NewDelimitedReader(comment with blank-line rejection) error = %v", err)
+	}
+}
+
+// A CRLF-framed record needs its width plus two bytes of Scanner buffer, so
+// every admitted width must fit MaxRecordBytes with that framing.
+func TestRecordWidthsFitTheRecordBoundWithCRLF(t *testing.T) {
+	t.Parallel()
+
+	reader, err := NewFixedWidthReader(strings.NewReader("abcdef\r\nabcd\r\nabcdef"), FixedWidthConfig{
+		Fields: []FixedWidthField{{Name: "a", Start: 0, End: 4}}, RecordWidths: []int{4, 6}, MaxRecordBytes: 8,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 3 {
+		if row, readErr := reader.Read(); readErr != nil || row[0] != "abcd" {
+			t.Fatalf("Read() = %q, %v", row, readErr)
+		}
+	}
+	if _, err := reader.Read(); !errors.Is(err, io.EOF) {
+		t.Fatalf("Read() error = %v, want EOF", err)
 	}
 }
 
@@ -332,6 +372,76 @@ func TestRecordWidthsCopiesCallerSlice(t *testing.T) {
 	}
 }
 
+// hasKnownGepositDelta reports the two accepted differences from Postal's
+// framing: a line ending in "\r\r", where Postal strips a carriage return
+// before encoding/csv strips another, and a line of 4,097 or 4,098 content
+// bytes, which only the library's one- or two-byte looser bound admits.
+func hasKnownGepositDelta(source []byte) bool {
+	for _, line := range bytes.SplitAfter(source, []byte{'\n'}) {
+		content := bytes.TrimSuffix(line, []byte{'\n'})
+		if bytes.HasSuffix(content, []byte("\r\r")) {
+			return true
+		}
+		if length := len(bytes.TrimSuffix(content, []byte{'\r'})); length > gepositRowBytes && length <= gepositRowBytes+2 {
+			return true
+		}
+	}
+	return false
+}
+
+// A doubled carriage return before a line end loses one CR in Postal but
+// keeps it as field data in the library. The changed field can then fail the
+// importer's validation and the whole import, so this delta is accepted only
+// because it fails closed on corrupted line endings.
+func TestKnownGepositCarriageReturnDelta(t *testing.T) {
+	t.Parallel()
+
+	for _, source := range []string{"0\r\r\n", "0\r\r"} {
+		want, wantErr := gepositReference([]byte(source))
+		got, gotErr := gepositLibrary([]byte(source))
+		if wantErr != nil || gotErr != nil || !reflect.DeepEqual(want, []Row{{"0"}}) ||
+			!reflect.DeepEqual(got, []Row{{"0\r"}}) {
+			t.Fatalf("%q: reference = %q, %v; library = %q, %v", source, want, wantErr, got, gotErr)
+		}
+	}
+}
+
+// Postal admits 4,096 content bytes per row. The library agrees at that
+// bound and beyond the two-byte framing allowance, and admits the accepted
+// one- or two-byte looser rows in between.
+func TestGepositRowBoundMatchesPostal(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		length int
+		ending string
+		delta  bool
+	}{
+		{gepositRowBytes, "", false},
+		{gepositRowBytes, "\n", false},
+		{gepositRowBytes, "\r\n", false},
+		{gepositRowBytes + 1, "", true},
+		{gepositRowBytes + 1, "\n", true},
+		{gepositRowBytes + 1, "\r\n", false},
+		{gepositRowBytes + 2, "", true},
+		{gepositRowBytes + 2, "\n", false},
+		{gepositRowBytes + 3, "", false},
+	} {
+		source := []byte(strings.Repeat("x", testCase.length) + testCase.ending)
+		if hasKnownGepositDelta(source) != (testCase.length > gepositRowBytes && testCase.length <= gepositRowBytes+2) {
+			t.Fatalf("%d bytes + %q: hasKnownGepositDelta disagrees with the documented delta", testCase.length, testCase.ending)
+		}
+		_, wantErr := gepositReference(source)
+		_, gotErr := gepositLibrary(source)
+		if (wantErr == nil) != (testCase.length <= gepositRowBytes) {
+			t.Fatalf("%d bytes + %q: reference error = %v", testCase.length, testCase.ending, wantErr)
+		}
+		if (gotErr == nil) != (testCase.length <= gepositRowBytes || testCase.delta) {
+			t.Fatalf("%d bytes + %q: library error = %v", testCase.length, testCase.ending, gotErr)
+		}
+	}
+}
+
 // FuzzPostalLineRecords checks that the line options reject and accept
 // exactly what Postal's line-at-a-time Geposit framing does for valid UTF-8.
 func FuzzPostalLineRecords(f *testing.F) {
@@ -340,10 +450,7 @@ func FuzzPostalLineRecords(f *testing.F) {
 	f.Add([]byte("a;\"b\nc\"\n"))
 	f.Add([]byte("a;b\r\n\r\nc\r\n"))
 	f.Fuzz(func(t *testing.T, source []byte) {
-		// Postal trims one carriage return before encoding/csv trims another,
-		// so "\r\r" before a line end differs by one data byte. That double
-		// trim is a Postal quirk the library does not reproduce.
-		if !utf8.Valid(source) || len(source) > 4096 || bytes.Contains(source, []byte("\r\r")) {
+		if !utf8.Valid(source) || len(source) > 16<<10 || hasKnownGepositDelta(source) {
 			t.Skip()
 		}
 		want, wantErr := gepositReference(source)
@@ -374,4 +481,97 @@ func FuzzPostalFixedWidth(f *testing.F) {
 			t.Fatalf("library rows = %q, reference rows = %q", got, want)
 		}
 	})
+}
+
+// readAllRecovering keeps reading past row errors, as an import that logs and
+// skips bad rows would, and returns every row and every error line.
+func readAllRecovering(t *testing.T, reader *DelimitedReader) ([]Row, []int) {
+	t.Helper()
+	var rows []Row
+	var errorLines []int
+	for range 100 {
+		row, err := reader.Read()
+		if errors.Is(err, io.EOF) {
+			return rows, errorLines
+		}
+		if err != nil {
+			var tabularErr *Error
+			if !errors.As(err, &tabularErr) ||
+				!errors.Is(err, ErrorMalformedRow) && !errors.Is(err, ErrorLimitExceeded) {
+				t.Fatalf("Read() error = %#v, want a recoverable row error", err)
+			}
+			errorLines = append(errorLines, tabularErr.Row)
+			continue
+		}
+		rows = append(rows, row)
+	}
+	t.Fatal("Read() never returned io.EOF")
+	return nil, nil
+}
+
+func TestRejectBlankLinesRecoversAfterEveryError(t *testing.T) {
+	t.Parallel()
+
+	for name, testCase := range map[string]struct {
+		source     string
+		config     DelimitedConfig
+		rows       []Row
+		errorLines []int
+	}{
+		"field count error": {
+			"a;b\nc\nd;e\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a", "b"}, {"d", "e"}}, []int{2},
+		},
+		"blank lines between records": {
+			"a\n\nb\nc\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a"}, {"b"}, {"c"}}, []int{2},
+		},
+		"blank run reported once": {
+			"a\n\n\nb\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a"}, {"b"}}, []int{2},
+		},
+		"trailing blank lines": {
+			"a\nb\n\n\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a"}, {"b"}}, []int{3},
+		},
+		"blank line before a syntax error": {
+			"a\n\nb\"c\nd\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true},
+			[]Row{{"a"}, {"d"}}, []int{2, 3},
+		},
+		"field limit": {
+			"a\nlong\n\nb\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true, MaxFieldBytes: 3},
+			[]Row{{"a"}, {"b"}}, []int{2, 3},
+		},
+		"spanning record": {
+			"a\n\"b\nc\"\n\nd\n", DelimitedConfig{Delimiter: ';', RejectBlankLines: true, SingleLineRecords: true},
+			[]Row{{"a"}, {"d"}}, []int{2, 4},
+		},
+	} {
+		reader, err := NewDelimitedReader(strings.NewReader(testCase.source), testCase.config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rows, errorLines := readAllRecovering(t, reader)
+		if !reflect.DeepEqual(rows, testCase.rows) || !reflect.DeepEqual(errorLines, testCase.errorLines) {
+			t.Fatalf("%s: rows = %q, error lines = %v; want %q, %v",
+				name, rows, errorLines, testCase.rows, testCase.errorLines)
+		}
+	}
+}
+
+func TestLineRecordOptionsKeepSourceLimitErrors(t *testing.T) {
+	t.Parallel()
+
+	reader, err := NewDelimitedReader(strings.NewReader("a\n"+strings.Repeat("b", 64)+"\n"), DelimitedConfig{
+		Delimiter: ';', RejectBlankLines: true, SingleLineRecords: true, MaxRecordBytes: 16,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if row, readErr := reader.Read(); readErr != nil || !reflect.DeepEqual(row, Row{"a"}) {
+		t.Fatalf("Read() = %q, %v", row, readErr)
+	}
+	if _, err = reader.Read(); !errors.Is(err, ErrorLimitExceeded) {
+		t.Fatalf("Read(over record limit) = %v, want limit exceeded", err)
+	}
 }

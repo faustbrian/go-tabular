@@ -48,16 +48,17 @@ type FixedWidthConfig struct {
 	RejectTrailingBytes bool
 	// RecordWidths, when nonempty, is the exact set of admitted record byte
 	// lengths after line framing; any other length is a malformed row. Every
-	// width must be unique and at least the final End, and the option cannot
-	// be combined with AllowShortRecords or RejectTrailingBytes. Construction
-	// copies the slice; empty keeps the layout-width checks above.
+	// width must be unique, at least the final End and at most MaxRecordBytes
+	// minus two, the CRLF framing, and the option cannot be combined with
+	// AllowShortRecords or RejectTrailingBytes. Construction copies the
+	// slice; empty keeps the layout-width checks above.
 	RecordWidths []int
 	// MaxRecordBytes sets the Scanner buffer/token ceiling; zero selects 1 MiB
 	// and negative values fail. Line framing may need space beyond data bytes,
 	// so payload equality is not an inclusive admission promise.
 	MaxRecordBytes int
 	// Normalize transforms decoded fields after their individual TrimSpace
-	// options.
+	// and TrimCutset options.
 	Normalize NormalizationConfig
 }
 
@@ -103,14 +104,13 @@ func NewFixedWidthReader(source io.Reader, config FixedWidthConfig) (*FixedWidth
 		}
 		end = field.End
 	}
-	recordWidths, ok := admittedRecordWidths(config, end)
-	if !ok {
-		return nil, &Error{Kind: ErrorInvalidLayout, Op: "fixedwidth.new", Format: "fixed-width"}
-	}
-
 	maxRecordBytes := config.MaxRecordBytes
 	if maxRecordBytes == 0 {
 		maxRecordBytes = defaultMaxRecordBytes
+	}
+	recordWidths, ok := admittedRecordWidths(config, end, maxRecordBytes)
+	if !ok {
+		return nil, &Error{Kind: ErrorInvalidLayout, Op: "fixedwidth.new", Format: "fixed-width"}
 	}
 	scanner := bufio.NewScanner(source)
 	scanner.Buffer(nil, maxRecordBytes)
@@ -184,8 +184,10 @@ func (reader *FixedWidthReader) Read() (Row, error) {
 	return NormalizeRow(row, reader.normalize), nil
 }
 
-// admittedRecordWidths validates and copies RecordWidths against the layout.
-func admittedRecordWidths(config FixedWidthConfig, layoutEnd int) ([]int, bool) {
+// admittedRecordWidths validates and copies RecordWidths against the layout
+// and the record bound. A CRLF-framed record occupies its width plus two
+// bytes of Scanner buffer, so a width the bound cannot frame is rejected.
+func admittedRecordWidths(config FixedWidthConfig, layoutEnd, maxRecordBytes int) ([]int, bool) {
 	if len(config.RecordWidths) == 0 {
 		return nil, true
 	}
@@ -194,7 +196,7 @@ func admittedRecordWidths(config FixedWidthConfig, layoutEnd int) ([]int, bool) 
 	}
 	widths := make([]int, 0, len(config.RecordWidths))
 	for _, width := range config.RecordWidths {
-		if width < layoutEnd || slices.Contains(widths, width) {
+		if width < layoutEnd || width > maxRecordBytes-2 || slices.Contains(widths, width) {
 			return nil, false
 		}
 		widths = append(widths, width)

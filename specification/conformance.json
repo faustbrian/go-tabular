@@ -16,13 +16,13 @@
     {
       "id": "TABULAR-DEC-002",
       "authoritative_sources": ["rfc4180-source"],
-      "executable_evidence": ["TestDelimitedReaderSupportsSemicolonAndComments", "TestDelimitedReaderEnforcesRecordAndFieldLimits", "TestDelimitedReaderAppliesSafeDefaultRecordLimit", "TestDelimitedReaderAppliesSafeDefaultFieldLimit", "TestDelimitedRecordLimitReaderBoundsBeforeParserAllocation", "TestDelimitedReaderValidatesConfiguration", "TestDelimitedAggregateAdmission", "TestCommentRecordAdmissionParity", "TestDelimitedSmallRecordFieldAndQuoteBudgets"],
-      "fixtures": ["testdata/delimited/semicolon.csv", "testdata/delimited/large.csv"],
-      "fuzz": ["FuzzDelimitedReader"],
+      "executable_evidence": ["TestDelimitedReaderSupportsSemicolonAndComments", "TestDelimitedReaderEnforcesRecordAndFieldLimits", "TestDelimitedReaderAppliesSafeDefaultRecordLimit", "TestDelimitedReaderAppliesSafeDefaultFieldLimit", "TestDelimitedRecordLimitReaderBoundsBeforeParserAllocation", "TestDelimitedReaderValidatesConfiguration", "TestDelimitedAggregateAdmission", "TestCommentRecordAdmissionParity", "TestDelimitedSmallRecordFieldAndQuoteBudgets", "TestLineRecordOptionsReportPhysicalLines", "TestRejectBlankLinesRecoversAfterEveryError", "TestLineRecordOptionsKeepSourceLimitErrors", "TestDelimitedLineRecordsMatchPostalGeposit", "TestGepositRowBoundMatchesPostal", "TestKnownGepositCarriageReturnDelta"],
+      "fixtures": ["testdata/delimited/semicolon.csv", "testdata/delimited/large.csv", "testdata/postal-parity/geposit.csv"],
+      "fuzz": ["FuzzDelimitedReader", "FuzzPostalLineRecords"],
       "interoperability_evidence": [],
       "interoperability_classification": "not assessed",
-      "differential_evidence": [],
-      "differential_classification": "not assessed",
+      "differential_evidence": ["postal_parity_test.go"],
+      "differential_classification": "maintained peer agreement",
       "public_behavior": ["Delimited profiles and logical-record limits are explicit repository policy."]
     },
     {
