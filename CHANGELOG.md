@@ -7,6 +7,8 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-30
+
 ### Added
 
 - `FixedWidthConfig.RecordWidths` admits an exact set of record byte lengths,
@@ -35,7 +37,7 @@ must become keyed literals.
   explicit encoding validation and aliasing. These clarifications change no
   existing parsing, format support or limits.
 
-## 2.0.3 - 2026-10-22
+## [2.0.3] - 2026-10-22
 
 ### Changed
 
@@ -310,7 +312,10 @@ consumers retain their published behavior without local `replace` directives.
 - Classify corrupt ZIP entry read failures through `ErrorArchive` while
   preserving the standard library's declared-size boundary.
 
-[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v2.0.3...HEAD
+[Unreleased]: https://github.com/faustbrian/go-tabular/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/faustbrian/go-tabular/compare/v2.0.3...v2.1.0
+[2.0.3]: https://github.com/faustbrian/go-tabular/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/faustbrian/go-tabular/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/faustbrian/go-tabular/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v2.0.0
 [1.0.0]: https://github.com/faustbrian/go-tabular/releases/tag/v1.0.0
