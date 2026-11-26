@@ -2,7 +2,7 @@
 // workbooks. It is an internal ingestion subset, not a general OLE library,
 // editor or macro evaluator. Open/OpenBounded return materialized mutable state;
 // callers serialize mutations. CFB geometry/chains and BIFF8 record admission
-// follow the pinned MS-CFB 12.0/MS-XLS 12.2 boundaries in the repository
+// follow the pinned MS-CFB 13.0/MS-XLS 12.2 boundaries in the repository
 // specification register; whole-format conformance is not claimed.
 package xls
 

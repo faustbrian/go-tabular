@@ -105,7 +105,7 @@ No unrelated runtime/race/fuzz/large-benchmark/conformance/386/release campaign.
 
 Evidence: every tracked source/assertion below, current ownership/admission
 contracts in README and docs, and resolved TABULAR-DEC-001 through -008. Authority
-identities are recorded in specification/manifest.json: RFC 4180; MS-CFB 12.0;
+identities are recorded in specification/manifest.json: RFC 4180; MS-CFB 13.0;
 MS-XLS 12.2; MS-OI29500 25.0; ECMA-376 fifth edition; XML 1.0 fifth edition;
 PKWARE APPNOTE 6.3.10. Go encoding/csv and the exact Excelize pseudo-version are
 delegates, not independent full conformance oracles. No normative history is

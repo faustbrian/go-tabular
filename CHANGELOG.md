@@ -7,6 +7,14 @@ and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Documentation
+
+- Adopt MS-CFB 13.0 (2026-10-26) as the pinned compound-file authority for
+  XLS container admission. Its only change, 51857, adds CLSID memory
+  representations to the section 3 structure examples; no section 2
+  structure changed, so XLS parsing behavior is unchanged.
+- TABULAR-DEC-004 sha256:fe2048ec96d08f2e0828be281ee5ae087a433fbef0d973987fcbabf7f6cef054
+
 ## [2.1.0] - 2026-10-30
 
 ### Added
