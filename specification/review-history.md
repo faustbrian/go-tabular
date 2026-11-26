@@ -1,5 +1,60 @@
 # Upstream review history
 
+## 2026-11-26: complete monitoring review
+
+All twelve monitoring entries were retrieved from their eight distinct HTTPS
+authorities with the specification checker's user agent. RFC 4180 and its
+errata, XML Fifth Edition and its errata, and PKWARE APPNOTE 6.3.10 remain
+byte-identical to their monitoring pins. The thirty-day cadence and all
+authority URLs remain unchanged.
+
+The three Microsoft publication-page digests changed and were stable across
+two independent requests:
+
+| Authorities | Previous SHA-256 | Current SHA-256 |
+| --- | --- | --- |
+| `ms-cfb-source`, `ms-cfb-releases` | `83ef929ae281404fe7a81e275b59eda5e58712d78c974212d5c728df733d36a3` | `abdb067478b655f898e8e3a0373f5624a813b27d1bb0219ffe3abf147ae59cd9` |
+| `ms-xls-source`, `ms-xls-releases` | `58000e0cf0037737d313453b814d9c556fbfa6bddad46508827cf13fac88dbfd` | `757636126ee4e982d3fdc9ac9103254fbf5b7c3379cc934b65c01313501b8db1` |
+| `ooxml-source`, `ooxml-releases` | `23a4f80d85f4d54d1fb179312817f9b9747f236ac1d3dbd8def7ea8375aa7f15` | `7b7e0a226cf2fa0600aea67c757f18a5916776d51fd7ab3adc731f78efaa94dc` |
+
+The MS-XLS and MS-OI29500 pages still identify MS-XLS 12.2 (2025-08-19) and
+MS-OI29500 25.0 (2026-08-18) as current. Their normative PDFs were
+retrieved twice and match the manifest pins exactly:
+`5711b0c9d3ca5821d4a7649c6e1abd0762228f7909311aeb86e90d72f64055b2` and
+`b297063cce0ac79d10a8efd382b0f90f3b9fd6615fac7f01c88f0288e5fa7372`. Prior
+HTML payloads are unavailable, so the byte differences are not attributed to
+presentation alone. Retain TABULAR-DEC-005 through TABULAR-DEC-007, their
+normative pins and conformance bindings, and update both notification
+digests.
+
+The MS-CFB page now lists MS-CFB 13.0, a Major revision published
+2026-10-26, above 12.0 (2024-04-23). The unversioned PDF selected by the
+manifest now serves 13.0 with SHA-256
+`dc5c9924fb9b1eaf074e319511fb99121c22124e868461f1de95849fdd3d6919` in place
+of the previous 12.0 payload
+`9d0d61e34495347ee32f3de5b06f2d59953cc60607ea72605d4162d21a34863f`; the
+13.0 digest was stable across two requests. The archived 12.0 PDF is
+distributed with rights-management protection and could not be compared
+byte for byte.
+
+The 13.0 change-tracking table lists a single change, 51857, "Added memory
+representation for CLSID". It touches only the section 3 structure
+examples: 3.1 The Header and 3.3.1 through 3.3.4, the example directory
+entries. No section 2 structure, field, constant or validation rule is
+listed as changed. The internal compound-file parser does not interpret
+CLSID bytes, so its sector, chain, directory and stream admission is
+unaffected. The `internal/xls` package tests, including the compound-file
+header, DIFAT, directory and chain rejection cases, and the root XLS reader
+tests against `testdata/spreadsheet/table.xls` and
+`testdata/spreadsheet/malformed.xls`, including the `FuzzOpenXLS` seed
+corpus, pass without change.
+
+TABULAR-DEC-004 now selects MS-CFB 13.0 (2026-10-26) with unchanged
+selected behavior, evidence and conformance binding. The manifest source is
+renamed `ms-cfb-13.0` and pinned to the 13.0 PDF digest, the module
+inventory declares MS-CFB 13.0, and both MS-CFB notification digests are
+updated. No XLS parsing behavior changes.
+
 ## 2026-10-10: complete monitoring review
 
 All twelve monitoring entries were retrieved from their eight distinct HTTPS

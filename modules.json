@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "repository": "github.com/faustbrian/go-tabular",
-  "go_version": "1.27.3",
+  "go_version": "1.27.4",
   "modules": [
     {
       "directory": ".",
@@ -62,7 +62,7 @@
       ],
       "specifications": [
         "RFC 4180 CSV",
-        "MS-CFB 12.0",
+        "MS-CFB 13.0",
         "MS-XLS 12.2",
         "ECMA-376 Fifth Edition and MS-OI29500 25.0",
         "XML 1.0 Fifth Edition",
@@ -133,7 +133,7 @@
         "supported_backends": [],
         "supported_protocols": [
           "ecma-376",
-          "ms-cfb-12",
+          "ms-cfb-13",
           "ms-oi29500-25",
           "ms-xls-12",
           "pkware-appnote-6-3-10",

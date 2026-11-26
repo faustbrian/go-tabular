@@ -3,7 +3,7 @@
   "reviewed_at": "2026-08-30",
   "sources": [
     {"id":"rfc4180","version":"RFC 4180","url":"https://www.rfc-editor.org/rfc/rfc4180.txt","sha256":"5d9ec035aa40c0108362cb767c9e2d08c30f7225cb2a4715f484cb13c29b5f21"},
-    {"id":"ms-cfb-12.0","version":"12.0 (2024-04-23)","url":"https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5bMS-CFB%5d.pdf","sha256":"9d0d61e34495347ee32f3de5b06f2d59953cc60607ea72605d4162d21a34863f"},
+    {"id":"ms-cfb-13.0","version":"13.0 (2026-10-26)","url":"https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5bMS-CFB%5d.pdf","sha256":"dc5c9924fb9b1eaf074e319511fb99121c22124e868461f1de95849fdd3d6919"},
     {"id":"ms-xls-12.2","version":"12.2 (2025-08-19)","url":"https://officeprotocoldocs-f5hpbjgea6b8gneq.b02.azurefd.net/files/MS-XLS/%5bMS-XLS%5d.pdf","sha256":"5711b0c9d3ca5821d4a7649c6e1abd0762228f7909311aeb86e90d72f64055b2"},
     {"id":"ms-oi29500-25.0","version":"25.0 (2026-08-18)","url":"https://officeprotocoldocs-f5hpbjgea6b8gneq.b02.azurefd.net/files/MS-OI29500/%5bMS-OI29500%5d.pdf","sha256":"b297063cce0ac79d10a8efd382b0f90f3b9fd6615fac7f01c88f0288e5fa7372"},
     {"id":"ecma-376-fifth-edition","version":"Fifth Edition, December 2016","url":"https://ecma-international.org/publications-and-standards/standards/ecma-376/","sha256":"5599117b2797cfe51b7a8751681177c5ddf48777b41b42145fb9d649cc33bbba"},
